@@ -113,21 +113,31 @@ export default function ColosseumPage({ params }: Props) {
     return () => window.removeEventListener('mousemove', handleMouseMove)
   }, [])
 
-  // Simulate live messages
+  // Connect to SSE stream
   useEffect(() => {
-    const interval = setInterval(() => {
-      const mockMsg: AXLMessage = {
-        id: Date.now().toString(),
-        from: Math.random() > 0.5 ? 'Athena-III' : 'Achilles',
-        type: Math.random() > 0.7 ? 'SCORE' : 'MOVE',
-        content: 'Analyzing next round challenge with updated opponent model...',
-        timestamp: Date.now(),
-        nodeColor: Math.random() > 0.5 ? 'sky' : 'hadria',
+    const eventSource = new EventSource(`/api/battle/${id}/stream`)
+
+    eventSource.onmessage = (event) => {
+      try {
+        const parsed = JSON.parse(event.data)
+        if (parsed.type === 'axl_message') {
+          setMessages(prev => [...prev.slice(-30), parsed.data])
+        } else if (parsed.type === 'round_score') {
+          setRound(parsed.data.round + 1)
+        }
+      } catch (e) {
+        console.error('Failed to parse SSE data', e)
       }
-      setMessages(prev => [...prev.slice(-30), mockMsg])
-    }, 4000)
-    return () => clearInterval(interval)
-  }, [])
+    }
+
+    eventSource.onerror = () => {
+      console.error('SSE Connection Error')
+    }
+
+    return () => {
+      eventSource.close()
+    }
+  }, [id])
 
   return (
     <div className="min-h-screen pt-20 px-6 pb-8">
