@@ -6,6 +6,7 @@ import { useGameStore, type Archetype } from '@/lib/store'
 import { ARCHETYPE_DESCRIPTIONS, ARCHETYPE_ICONS, cn } from '@/lib/utils'
 import { useAccount } from 'wagmi'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
+import { playSound } from '@/components/audio/SoundEffects'
 
 const ARCHETYPES: { id: Archetype; title: string; description: string; color: string; border: string }[] = [
   {
@@ -60,6 +61,7 @@ export default function ForgePage() {
   const [forgedSuccess, setForgedSuccess] = useState(false)
 
   const handleArchetypeSelect = (archetype: Archetype) => {
+    playSound('stoneClick')
     updateForge({ archetype })
   }
 
@@ -72,6 +74,7 @@ export default function ForgePage() {
   }
 
   const handleForge = async () => {
+    playSound('anvilStrike')
     setStep(3)
     // Simulate 5-stage forge sequence
     for (let i = 0; i < 5; i++) {
@@ -116,7 +119,12 @@ export default function ForgePage() {
           {['Archetype', 'Name', 'Directive'].map((label, i) => (
             <div key={label} className="flex items-center gap-3">
               <button
-                onClick={() => step > i && setStep(i)}
+                onClick={() => {
+                  if (step > i) {
+                    playSound('stoneClick')
+                    setStep(i)
+                  }
+                }}
                 className={cn(
                   'flex items-center gap-2 font-cinzel text-[8px] tracking-[.15em] uppercase transition-colors duration-300',
                   step === i ? 'text-sand' : step > i ? 'text-parch/40 cursor-pointer hover:text-parch/70' : 'text-parch/20 cursor-not-allowed'
@@ -182,7 +190,10 @@ export default function ForgePage() {
               <div className="flex justify-end">
                 <button
                   id="archetype-next"
-                  onClick={() => setStep(1)}
+                  onClick={() => {
+                    playSound('stoneClick')
+                    setStep(1)
+                  }}
                   disabled={!forgeState.archetype}
                   className={cn(
                     'btn-gold',
@@ -262,12 +273,12 @@ export default function ForgePage() {
               </div>
 
               <div className="flex justify-between">
-                <button onClick={() => setStep(0)} className="btn-ghost">
+                <button onClick={() => { playSound('stoneClick'); setStep(0) }} className="btn-ghost">
                   ← Back
                 </button>
                 <button
                   id="name-next"
-                  onClick={() => setStep(2)}
+                  onClick={() => { playSound('stoneClick'); setStep(2) }}
                   disabled={forgeState.nameStatus !== 'available'}
                   className={cn('btn-gold', forgeState.nameStatus !== 'available' && 'opacity-30 cursor-not-allowed')}
                 >
@@ -295,7 +306,7 @@ export default function ForgePage() {
                   {DIRECTIVE_PRESETS.map((preset, i) => (
                     <button
                       key={i}
-                      onClick={() => updateForge({ directive: preset })}
+                      onClick={() => { playSound('stoneClick'); updateForge({ directive: preset }) }}
                       className="font-cinzel text-[7px] tracking-widest uppercase border border-stone/30 text-parch/30 px-3 py-1.5 hover:border-sand/30 hover:text-parch/60 transition-all"
                     >
                       Preset {i + 1}
@@ -343,7 +354,7 @@ export default function ForgePage() {
               </div>
 
               <div className="flex justify-between">
-                <button onClick={() => setStep(1)} className="btn-ghost">← Back</button>
+                <button onClick={() => { playSound('stoneClick'); setStep(1) }} className="btn-ghost">← Back</button>
                 <button
                   id="forge-submit"
                   onClick={handleForge}
@@ -422,7 +433,7 @@ export default function ForgePage() {
                   <span>Enter the Agora →</span>
                 </a>
                 <button
-                  onClick={() => { resetForge(); setStep(0); setForgeProgress(-1); setForgedSuccess(false) }}
+                  onClick={() => { playSound('stoneClick'); resetForge(); setStep(0); setForgeProgress(-1); setForgedSuccess(false) }}
                   className="btn-ghost"
                 >
                   Forge Another

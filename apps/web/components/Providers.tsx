@@ -5,6 +5,7 @@ import { WagmiProvider } from 'wagmi'
 import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit'
 import { wagmiConfig } from '@/lib/wagmi'
 import { useState } from 'react'
+import { AudioProvider } from '@/components/audio/AudioProvider'
 import '@rainbow-me/rainbowkit/styles.css'
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -30,7 +31,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
             fontStack: 'system',
           })}
         >
-          {children}
+          <AudioProvider>
+            {children}
+          </AudioProvider>
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
