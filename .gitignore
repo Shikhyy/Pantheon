@@ -1,0 +1,47 @@
+# Node
+node_modules/
+.pnpm-store/
+*.log
+npm-debug.log*
+
+# Build outputs
+.next/
+dist/
+out/
+build/
+
+# Environment
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Foundry
+contracts/cache/
+contracts/out/
+contracts/broadcast/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+agent/__pycache__/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Theatre.js studio state
+.theatre/
