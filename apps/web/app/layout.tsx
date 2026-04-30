@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import { Providers } from '@/components/Providers'
+import { Navigation } from '@/components/ui/Navigation'
+import { Toaster } from 'sonner'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -24,7 +26,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          <Navigation />
+          <main className="min-h-screen pt-20">
+            {children}
+          </main>
+          <Toaster theme="dark" toastOptions={{ className: 'font-cinzel text-xs tracking-widest uppercase bg-nox border-stone/20 text-parch' }} />
+        </Providers>
       </body>
     </html>
   )

@@ -7,6 +7,7 @@ import { ARCHETYPE_DESCRIPTIONS, ARCHETYPE_ICONS, cn } from '@/lib/utils'
 import { useAccount } from 'wagmi'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { playSound } from '@/components/audio/SoundEffects'
+import { toast } from 'sonner'
 
 const ARCHETYPES: { id: Archetype; title: string; description: string; color: string; border: string }[] = [
   {
@@ -82,6 +83,8 @@ export default function ForgePage() {
       await new Promise(r => setTimeout(r, 1200))
     }
     setForgedSuccess(true)
+    playSound('apotheosis')
+    toast.success(`${forgeState.name || 'Your agent'} has been forged into the blockchain!`)
   }
 
   if (!isConnected) {
