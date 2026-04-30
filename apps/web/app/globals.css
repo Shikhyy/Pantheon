@@ -1,0 +1,143 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@300;400;500;600;700;900&family=Cinzel+Decorative:wght@400;700;900&family=IM+Fell+English:ital@0;1&family=Josefin+Sans:wght@200;300;400;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --parallax-rx: 0deg;
+  --parallax-ry: 0deg;
+}
+
+@layer base {
+  * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+  html { background: #07050F; color: #F2E0D5; scroll-behavior: smooth; }
+  body { font-family: 'Josefin Sans', sans-serif; font-weight: 300; overflow-x: hidden; }
+
+  ::selection {
+    background: rgba(201, 168, 76, 0.25);
+    color: #F2E0D5;
+  }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: #07050F; }
+  ::-webkit-scrollbar-thumb { background: rgba(217, 167, 139, 0.25); border-radius: 2px; }
+}
+
+@layer components {
+  /* Gold shimmer line */
+  .shimmer-line {
+    position: relative;
+  }
+  .shimmer-line::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(201,168,76,.7), transparent);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .shimmer-line:hover::after { opacity: 1; }
+
+  /* Stone tablet card */
+  .stone-card {
+    @apply bg-deep border border-stone/20 relative overflow-hidden transition-all duration-300 hover:border-sand/40 hover:-translate-y-1;
+  }
+
+  /* Button variants */
+  .btn-gold {
+    @apply font-cinzel text-[9px] tracking-[.18em] uppercase border border-sand text-sand bg-transparent px-6 py-3 relative overflow-hidden transition-colors duration-300 cursor-pointer;
+  }
+  .btn-gold::before {
+    content: '';
+    @apply absolute inset-0 bg-sand scale-x-0 origin-left transition-transform duration-300;
+    z-index: 0;
+  }
+  .btn-gold:hover::before { @apply scale-x-100; }
+  .btn-gold:hover { @apply text-nox; }
+  .btn-gold > * { position: relative; z-index: 1; }
+
+  .btn-ghost {
+    @apply font-cinzel text-[9px] tracking-[.18em] uppercase border border-stone/30 text-sand/35 bg-transparent px-6 py-3 transition-all duration-300 hover:border-sand/50 hover:text-sand cursor-pointer;
+  }
+
+  /* Meander border (Greek key pattern) */
+  .meander-top {
+    border-top: 1px solid transparent;
+    border-image: repeating-linear-gradient(
+      90deg,
+      rgba(201,168,76,0.4) 0px,
+      rgba(201,168,76,0.4) 4px,
+      transparent 4px,
+      transparent 8px
+    ) 1;
+  }
+
+  /* Agent rank pill */
+  .rank-pill {
+    @apply font-cinzel text-[8px] tracking-[.12em] uppercase px-2 py-0.5 border;
+  }
+  .rank-demigod  { @apply border-questa/40 text-questa; }
+  .rank-hero     { @apply border-willa/40 text-willa; }
+  .rank-god      { @apply border-sand/40 text-sand; }
+  .rank-titan    { @apply border-sky/40 text-sky; }
+  .rank-olympian { @apply border-gold/60 text-gold; }
+
+  /* Archetype badge */
+  .archetype-strategist { @apply text-sky border-sky/30; }
+  .archetype-oracle     { @apply text-questa border-questa/30; }
+  .archetype-berserker  { @apply text-hadria border-hadria/30; }
+  .archetype-diplomat   { @apply text-olivine border-olivine/30; }
+
+  /* Section heading greek style */
+  .section-label {
+    @apply font-cinzel text-[8px] tracking-[.25em] uppercase text-sand/50;
+  }
+
+  /* Roman numeral section */
+  .roman-numeral {
+    @apply font-cinzel-dec text-[48px] text-gold/10 select-none leading-none;
+  }
+
+  /* Health bar */
+  .health-bar-track {
+    @apply h-2 bg-stone/40 rounded-full overflow-hidden;
+  }
+  .health-bar-fill {
+    @apply h-full rounded-full transition-all duration-700 ease-out;
+    background: linear-gradient(90deg, #8B3A3A, #D97820, #C9A84C);
+  }
+
+  /* Whisper log entry */
+  .whisper-entry {
+    @apply text-[10px] font-josefin tracking-wide border-l-2 pl-3 py-1 mb-1;
+    animation: slideUp 0.3s ease-out forwards;
+  }
+  .whisper-move    { @apply border-sky/50 text-parch/70; }
+  .whisper-score   { @apply border-gold/50 text-gold/80; }
+  .whisper-verdict { @apply border-sand text-sand; }
+
+  /* Glass panel */
+  .glass-panel {
+    @apply bg-deep/60 backdrop-blur-sm border border-stone/20;
+  }
+}
+
+/* Smooth page transitions */
+.page-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 400ms ease-out, transform 400ms ease-out;
+}
+.page-exit {
+  opacity: 1;
+}
+.page-exit-active {
+  opacity: 0;
+  transition: opacity 300ms ease-in;
+}
