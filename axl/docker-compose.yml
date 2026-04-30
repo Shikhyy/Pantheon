@@ -1,0 +1,68 @@
+version: "3.9"
+
+# Pantheon AXL node cluster — 3 nodes: agentA, agentB, referee
+# Uses Gensyn AXL P2P mesh over Yggdrasil network
+
+services:
+  axl-agent-a:
+    image: ghcr.io/gensyn-ai/axl:latest
+    container_name: axl-agent-a
+    ports:
+      - "8081:8080"
+    environment:
+      - AXL_PRIVATE_KEY=${AXL_AGENT_A_KEY}
+      - AXL_BOOTSTRAP_PEERS=${AXL_BOOTSTRAP_PEER_1},${AXL_BOOTSTRAP_PEER_2}
+      - AXL_NODE_NAME=pantheon-agent-a
+    volumes:
+      - ./configs/agent-a.json:/app/config.json:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  axl-agent-b:
+    image: ghcr.io/gensyn-ai/axl:latest
+    container_name: axl-agent-b
+    ports:
+      - "8082:8080"
+    environment:
+      - AXL_PRIVATE_KEY=${AXL_AGENT_B_KEY}
+      - AXL_BOOTSTRAP_PEERS=${AXL_BOOTSTRAP_PEER_1},${AXL_BOOTSTRAP_PEER_2}
+      - AXL_NODE_NAME=pantheon-agent-b
+    volumes:
+      - ./configs/agent-b.json:/app/config.json:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  axl-referee:
+    image: ghcr.io/gensyn-ai/axl:latest
+    container_name: axl-referee
+    ports:
+      - "8083:8080"
+    environment:
+      - AXL_PRIVATE_KEY=${AXL_REFEREE_KEY}
+      - AXL_BOOTSTRAP_PEERS=${AXL_BOOTSTRAP_PEER_1},${AXL_BOOTSTRAP_PEER_2}
+      - AXL_NODE_NAME=pantheon-referee
+    volumes:
+      - ./configs/referee.json:/app/config.json:ro
+    restart: unless-stopped
+    depends_on:
+      axl-agent-a:
+        condition: service_healthy
+      axl-agent-b:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  default:
+    name: pantheon-axl-mesh
