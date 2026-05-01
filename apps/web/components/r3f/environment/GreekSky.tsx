@@ -48,15 +48,11 @@ export function GreekSky({ starCount = 2000 }: GreekSkyProps) {
         <bufferGeometry>
           <bufferAttribute
             attach="attributes-position"
-            count={starCount}
-            array={positions}
-            itemSize={3}
+            args={[positions, 3]}
           />
           <bufferAttribute
             attach="attributes-size"
-            count={starCount}
-            array={sizes}
-            itemSize={1}
+            args={[sizes, 1]}
           />
         </bufferGeometry>
         <pointsMaterial
@@ -80,9 +76,7 @@ export function GreekSky({ starCount = 2000 }: GreekSkyProps) {
             <bufferGeometry>
               <bufferAttribute
                 attach="attributes-position"
-                count={constellation.points.length}
-                array={new Float32Array(constellation.points.flat() as number[])}
-                itemSize={3}
+                args={[new Float32Array(constellation.points.flat() as number[]), 3]}
               />
             </bufferGeometry>
             <lineBasicMaterial color="#ffd700" opacity={0.3} transparent />

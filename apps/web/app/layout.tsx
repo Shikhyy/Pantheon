@@ -1,11 +1,6 @@
-'use client'
-
 import type { Metadata } from 'next'
-import { usePathname } from 'next/navigation'
-import { Providers } from '@/components/Providers'
-import { Toaster } from 'sonner'
-import OdysseyScene from '@/components/r3f/OdysseyScene'
-import './globals.css'
+import { ReactNode } from 'react'
+import ClientLayout from './ClientLayout'
 
 export const metadata: Metadata = {
   title: 'Pantheon — Where Mortal Code Becomes Immortal Legend',
@@ -25,20 +20,6 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname()
-
-  return (
-    <html lang="en" suppressHydrationWarning>
-      <body>
-        <OdysseyScene currentRoute={pathname} />
-        <Providers>
-          <main className="min-h-screen pt-20">
-            {children}
-          </main>
-          <Toaster theme="dark" toastOptions={{ className: 'font-cinzel text-xs tracking-widest uppercase bg-nox border-stone/20 text-parch' }} />
-        </Providers>
-      </body>
-    </html>
-  )
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return <ClientLayout>{children}</ClientLayout>
 }
