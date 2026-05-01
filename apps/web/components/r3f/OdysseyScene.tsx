@@ -16,7 +16,7 @@ import { HallOfGods } from './scenes/HallOfGods'
 import { HephaestusForge } from './scenes/HephaestusForge'
 import { ColosseumGate } from './scenes/ColosseumGate'
 
-import { useOdysseyStore } from '@/lib/odyssey-store'
+import { useOdysseyStore, OdysseySection } from '@/lib/odyssey-store'
 
 function SceneContent() {
   const { activeSection } = useOdysseyStore()
@@ -76,17 +76,18 @@ export default function OdysseyScene({ currentRoute }: OdysseySceneProps) {
   const { setActiveSection } = useOdysseyStore()
 
   useEffect(() => {
-    const sectionMap: Record<string, string> = {
+    const sectionMap: Record<string, OdysseySection> = {
       '/': 'landing',
       '/dashboard': 'dashboard',
       '/agora': 'agora',
       '/legends': 'legends',
       '/forge': 'forge',
+      '/colosseum': 'battle',
     }
 
     const basePath = '/' + currentRoute.split('/')[1]
     const section = sectionMap[basePath] || 'landing'
-    setActiveSection(section as any)
+    setActiveSection(section)
   }, [currentRoute, setActiveSection])
 
   return (
