@@ -26,25 +26,40 @@ function GodMesh({ god, position, scale = 1 }: GodStatueProps) {
     poseidon: '#1a3a5c',
   }[god]
 
+  const emissiveIntensity = god === 'zeus' ? 0.3 : 0.15
+
   return (
     <group position={position} scale={scale}>
       <mesh ref={meshRef} position={[0, 2.5, 0]}>
-        <cylinderGeometry args={[0.4, 0.5, 5, 8]} />
-        <meshStandardMaterial color={color} roughness={0.4} metalness={0.1} />
+        <cylinderGeometry args={[0.5, 0.6, 5, 16]} />
+        <meshStandardMaterial 
+          color={color} 
+          roughness={0.3} 
+          metalness={0.2}
+          emissive={color}
+          emissiveIntensity={emissiveIntensity}
+        />
       </mesh>
       <mesh position={[0, 5.5, 0]}>
-        <sphereGeometry args={[0.6, 16, 16]} />
-        <meshStandardMaterial color={color} roughness={0.4} metalness={0.1} />
+        <sphereGeometry args={[0.7, 16, 16]} />
+        <meshStandardMaterial 
+          color={color} 
+          roughness={0.3} 
+          metalness={0.2}
+          emissive={color}
+          emissiveIntensity={emissiveIntensity}
+        />
       </mesh>
       <mesh position={[0, 0, 0]}>
-        <cylinderGeometry args={[0.8, 1, 0.5, 8]} />
-        <meshStandardMaterial color="#3d2817" roughness={0.9} />
+        <cylinderGeometry args={[1, 1.2, 0.6, 16]} />
+        <meshStandardMaterial color="#2a2015" roughness={0.8} />
       </mesh>
+      <pointLight position={[0, 6, 2]} intensity={2} color="#ffd700" distance={8} />
       <spotLight
-        position={[0, 8, 3]}
-        angle={0.4}
+        position={[0, 9, 3]}
+        angle={0.5}
         penumbra={0.5}
-        intensity={1}
+        intensity={1.5}
         color="#ffd700"
         castShadow
       />

@@ -11,8 +11,8 @@ export function TempleOfZeus({ isActive = false }: { isActive?: boolean }) {
 
       <GodStatues
         gods={[
-          { god: 'zeus', position: [-6, 0, -3], scale: 1.2 },
-          { god: 'athena', position: [6, 0, -3], scale: 1.2 },
+          { god: 'zeus', position: [-5, 0, 0], scale: 1.5 },
+          { god: 'athena', position: [5, 0, 0], scale: 1.5 },
         ]}
       />
 
