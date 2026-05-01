@@ -93,7 +93,7 @@ export default function OdysseyScene({ currentRoute }: OdysseySceneProps) {
   return (
     <div className="fixed inset-0 -z-10">
       <Canvas
-        camera={{ position: [0, 4, 28], fov: 55 }}
+        camera={{ position: [0, 3, 12], fov: 60 }}
         gl={{
           antialias: true,
           alpha: true,

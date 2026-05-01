@@ -14,7 +14,7 @@ interface OdysseyState {
 export const useOdysseyStore = create<OdysseyState>((set) => ({
   activeSection: 'landing',
   isTransitioning: false,
-  cameraTarget: { x: 0, y: 4, z: 28 },
+  cameraTarget: { x: 0, y: 3, z: 12 },
   setActiveSection: (section) => set({ activeSection: section }),
   setTransitioning: (value) => set({ isTransitioning: value }),
   setCameraTarget: (target) => set({ cameraTarget: target }),

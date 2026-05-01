@@ -10,12 +10,12 @@ interface CameraConfig {
 }
 
 const sectionCameras: Record<string, CameraConfig> = {
-  landing: { position: [0, 4, 28], lookAt: [0, 4, 0] },
-  dashboard: { position: [0, 5, 15], lookAt: [0, 4, -5] },
-  agora: { position: [0, 4, 18], lookAt: [0, 3, -5] },
-  legends: { position: [0, 6, 20], lookAt: [0, 5, -5] },
-  forge: { position: [0, 3, 12], lookAt: [0, 2, -5] },
-  battle: { position: [0, 5, 16], lookAt: [0, 3, -5] },
+  landing: { position: [0, 3, 12], lookAt: [0, 3, -5] },
+  dashboard: { position: [0, 4, 12], lookAt: [0, 3, -5] },
+  agora: { position: [0, 3, 12], lookAt: [0, 3, -5] },
+  legends: { position: [0, 5, 15], lookAt: [0, 4, -5] },
+  forge: { position: [0, 2, 10], lookAt: [0, 2, -5] },
+  battle: { position: [0, 4, 14], lookAt: [0, 3, -5] },
 }
 
 export function CameraFlythrough() {
