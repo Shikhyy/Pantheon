@@ -1,3 +1,5 @@
+'use client'
+
 import type { Metadata } from 'next'
 import { usePathname } from 'next/navigation'
 import { Providers } from '@/components/Providers'
