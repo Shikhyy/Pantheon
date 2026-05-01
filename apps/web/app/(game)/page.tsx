@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import Link from 'next/link'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -51,10 +51,10 @@ const THE_WAYS = [
 ]
 
 const STATS = [
-  { label: 'Agents Forged', value: '847', suffix: '+' },
-  { label: 'Battles Fought', value: '2,341', suffix: '' },
-  { label: 'ETH Wagered', value: '128', suffix: ' ETH' },
-  { label: 'Sponsor Prizes', value: '$39,500', suffix: '' },
+  { label: 'Agents Forged', value: '847', prefix: '', suffix: '+' },
+  { label: 'Battles Fought', value: '2,341', prefix: '', suffix: '' },
+  { label: 'ETH Wagered', value: '128', prefix: '', suffix: ' ETH' },
+  { label: 'Sponsor Prizes', value: '$39,500', prefix: '', suffix: '' },
 ]
 
 export default function LandingPage() {
@@ -82,20 +82,27 @@ export default function LandingPage() {
     // Counter animations
     const counters = document.querySelectorAll('.stat-counter')
     counters.forEach((el) => {
-      const target = parseFloat((el as HTMLElement).dataset.target ?? '0')
-      gsap.fromTo(el,
-        { textContent: '0' },
-        {
-          textContent: target,
-          duration: 2,
-          ease: 'power1.out',
-          snap: { textContent: 1 },
-          scrollTrigger: {
-            trigger: el,
-            start: 'top 85%',
-          },
-        }
-      )
+      const element = el as HTMLElement
+      const target = Number(element.dataset.target ?? '0')
+      const prefix = element.dataset.prefix ?? ''
+      const suffix = element.dataset.suffix ?? ''
+      const formatter = new Intl.NumberFormat('en-US')
+      const counter = { value: 0 }
+
+      element.textContent = `${prefix}${formatter.format(0)}${suffix}`
+
+      gsap.to(counter, {
+        value: target,
+        duration: 2,
+        ease: 'power1.out',
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 85%',
+        },
+        onUpdate: () => {
+          element.textContent = `${prefix}${formatter.format(Math.floor(counter.value))}${suffix}`
+        },
+      })
     })
   }, { scope: containerRef })
 
@@ -121,10 +128,15 @@ export default function LandingPage() {
 
           {/* Stats row */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12 reveal-section">
-            {STATS.map(({ label, value, suffix }) => (
+            {STATS.map(({ label, value, prefix = '', suffix = '' }) => (
               <div key={label} className="stone-card p-4">
-                <div className="font-cinzel text-xl text-gold mb-1">
-                  {value}{suffix}
+                <div
+                  className="stat-counter font-cinzel text-xl text-gold mb-1"
+                  data-value={value}
+                  data-prefix={prefix}
+                  data-suffix={suffix}
+                >
+                  {prefix}0{suffix}
                 </div>
                 <div className="section-label text-[7px]">{label}</div>
               </div>
