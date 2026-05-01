@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { Providers } from '@/components/Providers'
-import { Navigation } from '@/components/ui/Navigation'
 import { Toaster } from 'sonner'
 import './globals.css'
 
@@ -27,7 +26,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body>
         <Providers>
-          <Navigation />
           <main className="min-h-screen pt-20">
             {children}
           </main>
