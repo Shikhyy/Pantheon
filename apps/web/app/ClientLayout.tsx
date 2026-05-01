@@ -14,7 +14,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
     <>
       <OdysseyScene currentRoute={pathname} />
       <Providers>
-        <main className="min-h-screen pt-20 relative z-10">
+        <main className="min-h-screen pt-20 relative z-10 bg-transparent">
           {children}
         </main>
         <Toaster theme="dark" toastOptions={{ className: 'font-cinzel text-xs tracking-widest uppercase bg-nox border-stone/20 text-parch' }} />
