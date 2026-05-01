@@ -4,15 +4,57 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── CSS Custom Properties ──────────────────────────────────────────── */
 :root {
   --parallax-rx: 0deg;
   --parallax-ry: 0deg;
+
+  /* Greek design tokens */
+  --gold:      #C9A84C;
+  --sand:      #D9A78B;
+  --parch:     #F2E0D5;
+  --stone:     #6B6560;
+  --nox:       #07050F;
+  --deep:      #0E0818;
+
+  /* Archetype colours */
+  --sky:       #5FB6D9;
+  --hadria:    #8B3A3A;
+  --olivine:   #9AAA60;
+  --questa:    #B0709A;
+
+  /* Greek meander pattern (used as border-image) */
+  --meander: repeating-linear-gradient(
+    90deg,
+    rgba(201,168,76,0.45) 0px,
+    rgba(201,168,76,0.45) 4px,
+    transparent 4px,
+    transparent 8px
+  );
+
+  /* Animation timing */
+  --ease-marble: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
+/* ── Base Styles ────────────────────────────────────────────────────── */
 @layer base {
   * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
-  html { background: #07050F; color: #F2E0D5; scroll-behavior: smooth; }
-  body { font-family: 'Josefin Sans', sans-serif; font-weight: 300; overflow-x: hidden; }
+
+  html {
+    background: #07050F;
+    color: #F2E0D5;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'Josefin Sans', sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+    /* Subtle vellum noise texture */
+    background-image:
+      radial-gradient(ellipse at 20% 0%, rgba(201,168,76,0.04) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 100%, rgba(95,182,217,0.03) 0%, transparent 60%);
+  }
 
   ::selection {
     background: rgba(201, 168, 76, 0.25);
@@ -21,11 +63,75 @@
 
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: #07050F; }
-  ::-webkit-scrollbar-thumb { background: rgba(217, 167, 139, 0.25); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(201,168,76,0.3), rgba(217,167,139,0.2));
+    border-radius: 2px;
+  }
+
+  /* Headings default to Cinzel */
+  h1, h2, h3, h4 { font-family: 'Cinzel', serif; }
 }
 
+/* ── Component Library ──────────────────────────────────────────────── */
 @layer components {
-  /* Gold shimmer line */
+
+  /* ── Cards ── */
+  .stone-card {
+    @apply bg-deep border border-stone/20 relative overflow-hidden transition-all duration-300;
+    background: linear-gradient(135deg, rgba(14,8,24,0.95) 0%, rgba(20,14,36,0.9) 100%);
+  }
+  .stone-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(201,168,76,0.025) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .stone-card:hover {
+    border-color: rgba(217,167,139,0.35);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(201,168,76,0.08);
+  }
+
+  /* Marble variant (lighter) */
+  .marble-card {
+    @apply relative overflow-hidden border border-stone/15;
+    background: linear-gradient(135deg, rgba(24,18,40,0.9) 0%, rgba(30,22,50,0.85) 100%);
+  }
+  .marble-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(201,168,76,0.5), transparent);
+  }
+
+  /* ── Buttons ── */
+  .btn-gold {
+    @apply font-cinzel text-[9px] tracking-[.18em] uppercase border border-sand text-sand bg-transparent px-6 py-3 relative overflow-hidden transition-all duration-300 cursor-pointer;
+    letter-spacing: 0.2em;
+  }
+  .btn-gold::before {
+    content: '';
+    @apply absolute inset-0 origin-left transition-transform duration-300;
+    background: linear-gradient(90deg, var(--gold), var(--sand));
+    transform: scaleX(0);
+    z-index: 0;
+  }
+  .btn-gold:hover::before { transform: scaleX(1); }
+  .btn-gold:hover { @apply text-nox; }
+  .btn-gold > * { position: relative; z-index: 1; }
+
+  .btn-ghost {
+    @apply font-cinzel text-[9px] tracking-[.18em] uppercase border border-stone/30 text-sand/35 bg-transparent px-6 py-3 transition-all duration-300 hover:border-sand/50 hover:text-sand cursor-pointer;
+  }
+
+  /* Archetype-coloured CTA button */
+  .btn-archetype {
+    @apply font-cinzel text-[9px] tracking-[.18em] uppercase px-6 py-3 border relative overflow-hidden transition-all duration-300 cursor-pointer;
+  }
+
+  /* ── Gold shimmer hover ── */
   .shimmer-line {
     position: relative;
   }
@@ -34,47 +140,43 @@
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(201,168,76,.7), transparent);
+    background: linear-gradient(90deg, transparent, rgba(201,168,76,0.7), transparent);
     opacity: 0;
     transition: opacity 0.4s;
   }
   .shimmer-line:hover::after { opacity: 1; }
 
-  /* Stone tablet card */
-  .stone-card {
-    @apply bg-deep border border-stone/20 relative overflow-hidden transition-all duration-300 hover:border-sand/40 hover:-translate-y-1;
-  }
-
-  /* Button variants */
-  .btn-gold {
-    @apply font-cinzel text-[9px] tracking-[.18em] uppercase border border-sand text-sand bg-transparent px-6 py-3 relative overflow-hidden transition-colors duration-300 cursor-pointer;
-  }
-  .btn-gold::before {
-    content: '';
-    @apply absolute inset-0 bg-sand scale-x-0 origin-left transition-transform duration-300;
-    z-index: 0;
-  }
-  .btn-gold:hover::before { @apply scale-x-100; }
-  .btn-gold:hover { @apply text-nox; }
-  .btn-gold > * { position: relative; z-index: 1; }
-
-  .btn-ghost {
-    @apply font-cinzel text-[9px] tracking-[.18em] uppercase border border-stone/30 text-sand/35 bg-transparent px-6 py-3 transition-all duration-300 hover:border-sand/50 hover:text-sand cursor-pointer;
-  }
-
-  /* Meander border (Greek key pattern) */
+  /* ── Greek key borders ── */
   .meander-top {
     border-top: 1px solid transparent;
-    border-image: repeating-linear-gradient(
-      90deg,
-      rgba(201,168,76,0.4) 0px,
-      rgba(201,168,76,0.4) 4px,
-      transparent 4px,
-      transparent 8px
-    ) 1;
+    border-image: var(--meander) 1;
+  }
+  .meander-bottom {
+    border-bottom: 1px solid transparent;
+    border-image: var(--meander) 1;
+  }
+  .meander-x {
+    border-top: 1px solid transparent;
+    border-bottom: 1px solid transparent;
+    border-image: var(--meander) 1;
   }
 
-  /* Agent rank pill */
+  /* ── Decorative divider ── */
+  .greek-divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    opacity: 0.4;
+  }
+  .greek-divider::before,
+  .greek-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--meander);
+  }
+
+  /* ── Rank pills ── */
   .rank-pill {
     @apply font-cinzel text-[8px] tracking-[.12em] uppercase px-2 py-0.5 border;
   }
@@ -82,34 +184,37 @@
   .rank-hero     { @apply border-willa/40 text-willa; }
   .rank-god      { @apply border-sand/40 text-sand; }
   .rank-titan    { @apply border-sky/40 text-sky; }
-  .rank-olympian { @apply border-gold/60 text-gold; }
+  .rank-olympian {
+    @apply border-gold/60 text-gold;
+    box-shadow: 0 0 8px rgba(201,168,76,0.3);
+  }
 
-  /* Archetype badge */
+  /* ── Archetype badges ── */
   .archetype-strategist { @apply text-sky border-sky/30; }
   .archetype-oracle     { @apply text-questa border-questa/30; }
   .archetype-berserker  { @apply text-hadria border-hadria/30; }
   .archetype-diplomat   { @apply text-olivine border-olivine/30; }
 
-  /* Section heading greek style */
+  /* ── Section labels ── */
   .section-label {
     @apply font-cinzel text-[8px] tracking-[.25em] uppercase text-sand/50;
   }
 
-  /* Roman numeral section */
+  /* ── Roman numerals ── */
   .roman-numeral {
     @apply font-cinzel-dec text-[48px] text-gold/10 select-none leading-none;
   }
 
-  /* Health bar */
+  /* ── Health bars ── */
   .health-bar-track {
-    @apply h-2 bg-stone/40 rounded-full overflow-hidden;
+    @apply h-2 bg-stone/40 overflow-hidden;
   }
   .health-bar-fill {
-    @apply h-full rounded-full transition-all duration-700 ease-out;
+    @apply h-full transition-all duration-700 ease-out;
     background: linear-gradient(90deg, #8B3A3A, #D97820, #C9A84C);
   }
 
-  /* Whisper log entry */
+  /* ── Whisper log ── */
   .whisper-entry {
     @apply text-[10px] font-josefin tracking-wide border-l-2 pl-3 py-1 mb-1;
     animation: slideUp 0.3s ease-out forwards;
@@ -118,13 +223,119 @@
   .whisper-score   { @apply border-gold/50 text-gold/80; }
   .whisper-verdict { @apply border-sand text-sand; }
 
-  /* Glass panel */
+  /* ── Glass panel ── */
   .glass-panel {
     @apply bg-deep/60 backdrop-blur-sm border border-stone/20;
   }
+
+  /* ── Avatar card frame (Greek corners) ── */
+  .avatar-card-frame {
+    position: relative;
+    border: 1px solid rgba(201,168,76,0.2);
+    background: linear-gradient(135deg, rgba(14,8,24,0.9), rgba(20,14,36,0.8));
+  }
+  .avatar-corner {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-color: rgba(201,168,76,0.6);
+    border-style: solid;
+    z-index: 2;
+  }
+  .avatar-corner-tl { top: 0; left: 0; border-width: 1.5px 0 0 1.5px; }
+  .avatar-corner-tr { top: 0; right: 0; border-width: 1.5px 1.5px 0 0; }
+  .avatar-corner-bl { bottom: 0; left: 0; border-width: 0 0 1.5px 1.5px; }
+  .avatar-corner-br { bottom: 0; right: 0; border-width: 0 1.5px 1.5px 0; }
+
+  /* ── Stat row ── */
+  .stat-row {
+    @apply flex items-center justify-between py-2 border-b border-stone/10 last:border-0;
+  }
+  .stat-label { @apply section-label text-[7px]; }
+  .stat-value { @apply font-cinzel text-sm text-parch/80; }
+
+  /* ── Prophecy glow (for Oracle elements) ── */
+  .prophecy-glow {
+    box-shadow: 0 0 20px rgba(255,208,96,0.15), 0 0 60px rgba(255,208,96,0.05);
+  }
+
+  /* ── Berserker vignette (for battle state active) ── */
+  .battle-vignette::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 60%, rgba(139,26,26,0.2) 100%);
+    pointer-events: none;
+    z-index: 9;
+    animation: vignetteFlare 0.4s ease-in-out;
+  }
+
+  /* ── Live badge ── */
+  .live-badge {
+    @apply font-cinzel text-[8px] tracking-widest uppercase text-olivine;
+    animation: livePulse 2s ease-in-out infinite;
+  }
+
+  /* ── Navigation active indicator ── */
+  .nav-link-active::after {
+    content: '';
+    display: block;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin-top: 2px;
+  }
 }
 
-/* Smooth page transitions */
+/* ── Keyframe Animations ────────────────────────────────────────────── */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes drift {
+  0%, 100% { transform: translateY(0px) rotate(-1deg); }
+  50%       { transform: translateY(-8px) rotate(1deg); }
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+@keyframes goldShimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@keyframes vignetteFlare {
+  0%   { opacity: 0; }
+  50%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes marbleReveal {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes spearSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Utility animations ── */
+.animate-drift {
+  animation: drift 6s ease-in-out infinite;
+}
+.animate-gold-shimmer {
+  background: linear-gradient(90deg, var(--gold) 0%, #F5E07A 50%, var(--gold) 100%);
+  background-size: 200% auto;
+  animation: goldShimmer 3s linear infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ── Page transitions ── */
 .page-enter {
   opacity: 0;
   transform: translateY(20px);
@@ -134,9 +345,7 @@
   transform: translateY(0);
   transition: opacity 400ms ease-out, transform 400ms ease-out;
 }
-.page-exit {
-  opacity: 1;
-}
+.page-exit { opacity: 1; }
 .page-exit-active {
   opacity: 0;
   transition: opacity 300ms ease-in;
