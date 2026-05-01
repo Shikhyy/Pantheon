@@ -1,21 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {BaseHook} from "@uniswap/v4-periphery/src/base/hooks/BaseHook.sol";
-import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
-import {Hooks} from "@uniswap/v4-core/src/libraries/Hooks.sol";
-import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
-import {BalanceDelta} from "@uniswap/v4-core/src/types/BalanceDelta.sol";
-import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "@uniswap/v4-core/src/types/BeforeSwapDelta.sol";
-import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-/// @title AgoraPool — Uniswap v4 Hook for Battle Spectator Wagering
+/// @title AgoraPool — Battle Spectator Wagering
 /// @notice Spectators deposit any ERC-20 into pools for active battles.
 ///         On battle end, settle() distributes: 70% winners, 20% battle winner, 10% treasury.
-contract AgoraPool is BaseHook, ReentrancyGuard {
+contract AgoraPool is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     // ── Errors ────────────────────────────────────────────────────────────
@@ -23,16 +17,17 @@ contract AgoraPool is BaseHook, ReentrancyGuard {
     error BattleAlreadySettled();
     error NotBattleArena();
     error ZeroAmount();
+    error AlreadyClaimed();
 
-    // ── Structs ───────────────────────────────────────────────────────────
+    // ── Structs ─────────────────────────────────────────────────────────
     struct PoolState {
         bool     active;
         bool     settled;
         uint256  challengerTokenId;
         uint256  defenderTokenId;
-        address  settlementToken;   // token all wagers are converted to
-        uint256  totalChallenger;   // total wagered on challenger
-        uint256  totalDefender;     // total wagered on defender
+        address  settlementToken;
+        uint256  totalChallenger;
+        uint256  totalDefender;
     }
 
     struct Position {
@@ -41,58 +36,38 @@ contract AgoraPool is BaseHook, ReentrancyGuard {
     }
 
     // ── State ─────────────────────────────────────────────────────────────
-    address public immutable battleArena;
-    address public immutable treasury;
+    address public battleArena;
 
     mapping(bytes32 => PoolState)                          public pools;
     mapping(bytes32 => mapping(address => Position))       public positions;
 
-    uint256 public constant WINNER_SPECTATOR_SHARE = 70; // %
-    uint256 public constant BATTLE_WINNER_SHARE    = 20; // %
-    uint256 public constant TREASURY_SHARE         = 10; // %
+    uint256 public constant WINNER_SPECTATOR_SHARE = 70;
+    uint256 public constant BATTLE_WINNER_SHARE    = 20;
+    uint256 public constant TREASURY_SHARE         = 10;
 
     // ── Events ────────────────────────────────────────────────────────────
     event PoolOpened(bytes32 indexed battleId, uint256 challenger, uint256 defender);
     event WagerPlaced(bytes32 indexed battleId, address indexed spectator, uint256 amount, bool onChallenger);
     event PoolSettled(bytes32 indexed battleId, address winner, uint256 totalPool);
 
-    // ── Hook permissions ──────────────────────────────────────────────────
-    function getHookPermissions() public pure override returns (Hooks.Permissions memory) {
-        return Hooks.Permissions({
-            beforeInitialize:      false,
-            afterInitialize:       false,
-            beforeAddLiquidity:    false,
-            afterAddLiquidity:     true,   // record spectator position
-            beforeRemoveLiquidity: false,
-            afterRemoveLiquidity:  false,
-            beforeSwap:            true,   // validate battle is active
-            afterSwap:             true,   // record swap-based wager
-            beforeDonate:          false,
-            afterDonate:           false,
-            beforeSwapReturnDelta: false,
-            afterSwapReturnDelta:  false,
-            afterAddLiquidityReturnDelta: false,
-            afterRemoveLiquidityReturnDelta: false
-        });
+    // ── Constructor ────────────────────────────────────────────────
+    constructor(address _treasury) Ownable(_treasury) {
+        battleArena = msg.sender;
     }
 
-    constructor(IPoolManager _manager, address _battleArena, address _treasury)
-        BaseHook(_manager)
-    {
+    function setBattleArena(address _battleArena) external onlyOwner {
         battleArena = _battleArena;
-        treasury    = _treasury;
     }
 
     // ── Arena Interface ───────────────────────────────────────────────────
 
-    /// @notice Called by BattleArena when a battle is accepted.
     function openPool(
         bytes32 battleId,
         address settlementToken,
         uint256 challengerTokenId,
         uint256 defenderTokenId
     ) external {
-        if (msg.sender != battleArena) revert NotBattleArena();
+        require(msg.sender == battleArena, NotBattleArena());
         pools[battleId] = PoolState({
             active:            true,
             settled:           false,
@@ -105,15 +80,14 @@ contract AgoraPool is BaseHook, ReentrancyGuard {
         emit PoolOpened(battleId, challengerTokenId, defenderTokenId);
     }
 
-    /// @notice Direct wager deposit (no swap — spectators who already hold the right token).
     function placeWager(
         bytes32 battleId,
         uint256 amount,
         bool    onChallenger
     ) external nonReentrant {
         PoolState storage pool = pools[battleId];
-        if (!pool.active || pool.settled) revert BattleNotActive();
-        if (amount == 0) revert ZeroAmount();
+        require(pool.active && !pool.settled, BattleNotActive());
+        require(amount > 0, ZeroAmount());
 
         IERC20(pool.settlementToken).safeTransferFrom(msg.sender, address(this), amount);
 
@@ -127,33 +101,32 @@ contract AgoraPool is BaseHook, ReentrancyGuard {
         emit WagerPlaced(battleId, msg.sender, amount, onChallenger);
     }
 
-    /// @notice Settle pool on battle end. Only callable by BattleArena.
     function settle(bytes32 battleId, address battleWinner) external nonReentrant {
-        if (msg.sender != battleArena)  revert NotBattleArena();
+        require(msg.sender == battleArena, NotBattleArena());
         PoolState storage pool = pools[battleId];
-        if (!pool.active)   revert BattleNotActive();
-        if (pool.settled)   revert BattleAlreadySettled();
+        require(pool.active, BattleNotActive());
+        require(!pool.settled, BattleAlreadySettled());
 
         pool.active   = false;
         pool.settled  = true;
 
         uint256 total = pool.totalChallenger + pool.totalDefender;
-        if (total == 0) return; // No spectator wagers, nothing to distribute
+        if (total == 0) return;
 
-        // Determine winning side
-        bool challengerWon = (battleWinner == address(uint160(pool.challengerTokenId))); // simplified
+        bool challengerWon = (battleWinner == address(uint160(pool.challengerTokenId)));
         uint256 winnerTotal = challengerWon ? pool.totalChallenger : pool.totalDefender;
 
-        uint256 spectatorPool    = (total * WINNER_SPECTATOR_SHARE) / 100;
-        uint256 battleWinnerCut  = (total * BATTLE_WINNER_SHARE) / 100;
-        uint256 treasuryCut      = total - spectatorPool - battleWinnerCut;
+        uint256 spectatorPool   = (total * WINNER_SPECTATOR_SHARE) / 100;
+        uint256 battleWinnerCut = (total * BATTLE_WINNER_SHARE) / 100;
+        uint256 treasuryCut     = total - spectatorPool - battleWinnerCut;
 
-        // Battle winner gets their cut
-        IERC20(pool.settlementToken).safeTransfer(battleWinner, battleWinnerCut);
-        IERC20(pool.settlementToken).safeTransfer(treasury, treasuryCut);
+        if (battleWinnerCut > 0) {
+            IERC20(pool.settlementToken).safeTransfer(battleWinner, battleWinnerCut);
+        }
+        if (treasuryCut > 0) {
+            IERC20(pool.settlementToken).safeTransfer(owner(), treasuryCut);
+        }
 
-        // Winning spectators can claim proportional share
-        // We store the settlement data for pull-based claiming
         _settlementData[battleId] = SettlementData({
             spectatorPool: spectatorPool,
             winnerTotal:   winnerTotal,
@@ -162,46 +135,6 @@ contract AgoraPool is BaseHook, ReentrancyGuard {
         });
 
         emit PoolSettled(battleId, battleWinner, total);
-    }
-
-    // ── Hook Implementations ──────────────────────────────────────────────
-
-    function beforeSwap(
-        address, PoolKey calldata, IPoolManager.SwapParams calldata, bytes calldata hookData
-    ) external override returns (bytes4, BeforeSwapDelta, uint24) {
-        // Validate that the swap is for an active battle
-        bytes32 battleId = abi.decode(hookData, (bytes32));
-        PoolState memory pool = pools[battleId];
-        if (!pool.active) revert BattleNotActive();
-        return (BaseHook.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, 0);
-    }
-
-    function afterSwap(
-        address, PoolKey calldata, IPoolManager.SwapParams calldata,
-        BalanceDelta delta, bytes calldata hookData
-    ) external override returns (bytes4, int128) {
-        // Record swap-based wager (UniswapX converts any token → settlement token)
-        (bytes32 battleId, address spectator, bool onChallenger) =
-            abi.decode(hookData, (bytes32, address, bool));
-
-        uint256 amount = uint256(uint128(-delta.amount0()));
-        if (amount > 0) {
-            PoolState storage pool = pools[battleId];
-            positions[battleId][spectator].amount      += amount;
-            positions[battleId][spectator].onChallenger = onChallenger;
-            if (onChallenger) pool.totalChallenger += amount;
-            else              pool.totalDefender   += amount;
-            emit WagerPlaced(battleId, spectator, amount, onChallenger);
-        }
-
-        return (BaseHook.afterSwap.selector, 0);
-    }
-
-    function afterAddLiquidity(
-        address, PoolKey calldata, IPoolManager.ModifyLiquidityParams calldata,
-        BalanceDelta, BalanceDelta, bytes calldata
-    ) external override returns (bytes4, BalanceDelta) {
-        return (BaseHook.afterAddLiquidity.selector, BalanceDelta.wrap(0));
     }
 
     // ── Settlement Claim ──────────────────────────────────────────────────
@@ -219,13 +152,15 @@ contract AgoraPool is BaseHook, ReentrancyGuard {
     function claimWinnings(bytes32 battleId) external nonReentrant {
         SettlementData storage sd = _settlementData[battleId];
         require(sd.claimable, "Not claimable");
-        require(!_claimed[battleId][msg.sender], "Already claimed");
+        require(!_claimed[battleId][msg.sender], AlreadyClaimed());
 
         Position memory pos = positions[battleId][msg.sender];
         require(pos.amount > 0, "No position");
         require(pos.onChallenger == sd.challengerWon, "Wrong side");
 
         uint256 share = (pos.amount * sd.spectatorPool) / sd.winnerTotal;
+        require(share > 0, "No winnings");
+
         _claimed[battleId][msg.sender] = true;
 
         IERC20(pools[battleId].settlementToken).safeTransfer(msg.sender, share);
