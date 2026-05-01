@@ -8,40 +8,25 @@ import {AgoraPool} from "../src/AgoraPool.sol";
 import {BreedingForge} from "../src/BreedingForge.sol";
 import {PantheonSubnames} from "../src/PantheonSubnames.sol";
 
-// Mock IPoolManager for deployment compilation since we don't have Uniswap V4 repo pulled in fully
-import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
-
 contract Deploy is Script {
     function run() external {
         uint256 deployerKey = vm.envUint("PRIVATE_KEY");
+        address deployer = vm.addr(deployerKey);
         address referee     = vm.envAddress("REFEREE_ADDRESS");
         address treasury    = vm.envAddress("TREASURY_ADDRESS");
-        address poolManager = vm.envAddress("UNISWAP_V4_POOL_MANAGER");
 
         vm.startBroadcast(deployerKey);
 
-        // 1. Deploy PantheonAgent
         PantheonAgent pantheonAgent = new PantheonAgent();
         console.log("PantheonAgent:", address(pantheonAgent));
 
-        // 2. Deploy PantheonSubnames
-        PantheonSubnames subnames = new PantheonSubnames(
-            address(0), // pantheonNode
-            address(0), // ensRegistry
-            address(0), // battleArena
-            address(pantheonAgent)
-        );
+        PantheonSubnames subnames = new PantheonSubnames();
+        subnames.transferOwnership(deployer);
         console.log("PantheonSubnames:", address(subnames));
 
-        // 3. Deploy AgoraPool
-        AgoraPool agoraPool = new AgoraPool(
-            IPoolManager(poolManager),
-            address(0), // battleArena — set after
-            treasury
-        );
+        AgoraPool agoraPool = new AgoraPool(deployer);
         console.log("AgoraPool:", address(agoraPool));
 
-        // 4. Deploy BattleArena
         BattleArena battleArena = new BattleArena(
             address(pantheonAgent),
             address(agoraPool),
@@ -51,13 +36,15 @@ contract Deploy is Script {
         );
         console.log("BattleArena:", address(battleArena));
 
-        // 5. Deploy BreedingForge
         BreedingForge breedingForge = new BreedingForge(address(pantheonAgent));
         console.log("BreedingForge:", address(breedingForge));
 
-        // 6. Wire contracts
+        agoraPool.setBattleArena(address(battleArena));
         pantheonAgent.setBattleArena(address(battleArena));
         pantheonAgent.setBreedingForge(address(breedingForge));
+
+        subnames.setBattleArena(address(battleArena));
+        subnames.setPantheonAgent(address(pantheonAgent));
 
         vm.stopBroadcast();
 
