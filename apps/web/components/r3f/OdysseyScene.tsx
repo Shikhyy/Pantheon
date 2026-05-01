@@ -27,14 +27,15 @@ function SceneContent() {
 
       <GreekSky starCount={2000} />
 
-      <ambientLight intensity={0.15} color="#1a3a5c" />
+      <ambientLight intensity={0.4} color="#1a3a5c" />
       <directionalLight
         position={[10, 20, 5]}
-        intensity={0.2}
+        intensity={0.5}
         color="#9090ff"
         castShadow
         shadow-mapSize={[1024, 1024]}
       />
+      <pointLight position={[0, 5, 5]} intensity={1} color="#ffd700" distance={20} />
 
       {activeSection === 'landing' && (
         <>
@@ -52,14 +53,14 @@ function SceneContent() {
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
         <planeGeometry args={[100, 100]} />
-        <meshStandardMaterial color="#0a0a0f" roughness={1} />
+        <meshStandardMaterial color="#1a1520" roughness={0.9} />
       </mesh>
 
       <EffectComposer multisampling={4}>
         <Bloom
-          intensity={0.5}
+          intensity={0.3}
           mipmapBlur
-          luminanceThreshold={0.7}
+          luminanceThreshold={0.8}
           luminanceSmoothing={0.4}
         />
         <Vignette eskil={false} offset={0.15} darkness={0.9} />
@@ -98,7 +99,7 @@ export default function OdysseyScene({ currentRoute }: OdysseySceneProps) {
           antialias: true,
           alpha: true,
           toneMapping: ACESFilmicToneMapping,
-          toneMappingExposure: 1.1,
+          toneMappingExposure: 1.5,
         }}
         shadows={{ type: PCFSoftShadowMap }}
         dpr={[1, 2]}
