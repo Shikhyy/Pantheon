@@ -1,15 +1,14 @@
 'use client'
 
+import { useMemo } from 'react'
 import { MOCK_AGENTS } from '@/lib/mock-data'
-import { cn, getArchetypeColor, getRankClass, winRate, ARCHETYPE_ICONS } from '@/lib/utils'
+import { cn, winRate, ARCHETYPE_ICONS } from '@/lib/utils'
 import Link from 'next/link'
 
-const SEASON_ENDS = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-
 export default function LegendsPage() {
-  const sorted = [...MOCK_AGENTS].sort((a, b) => b.elo - a.elo)
+  const sorted = useMemo(() => [...MOCK_AGENTS].sort((a, b) => b.elo - a.elo), [])
   const champion = sorted[0]
-  const daysLeft = Math.ceil((SEASON_ENDS.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+  const daysLeft = useMemo(() => Math.ceil((new Date('2026-05-08').getTime() - Date.now()) / (1000 * 60 * 60 * 24)), [])
 
   return (
     <div className="min-h-screen pt-24 pb-16 px-6">
