@@ -136,9 +136,72 @@ export const BATTLE_ARENA_ABI = [
   },
 ] as const
 
+export const BREEDING_FORGE_ABI = [
+  {
+    name: 'breed',
+    type: 'function',
+    stateMutability: 'payable',
+    inputs: [
+      { name: 'parent1Id', type: 'uint256' },
+      { name: 'parent2Id', type: 'uint256' },
+      { name: 'offspringName', type: 'string' },
+      { name: 'offspringStorageHash', type: 'bytes32' },
+      { name: 'preimage', type: 'bytes32' },
+    ],
+    outputs: [],
+  },
+  {
+    name: 'commitBreed',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'commitHash', type: 'bytes32' }],
+    outputs: [],
+  },
+  {
+    name: 'OffspringMinted',
+    type: 'event',
+    inputs: [
+      { name: 'offspringId', type: 'uint256', indexed: true },
+      { name: 'parent1', type: 'uint256', indexed: false },
+      { name: 'parent2', type: 'uint256', indexed: false },
+      { name: 'legendary', type: 'bool', indexed: false },
+    ],
+  },
+] as const
+
+export const AGORA_POOL_ABI = [
+  {
+    name: 'placeWager',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'battleId', type: 'bytes32' },
+      { name: 'amount', type: 'uint256' },
+      { name: 'onChallenger', type: 'bool' },
+    ],
+    outputs: [],
+  },
+  {
+    name: 'claimWinnings',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'battleId', type: 'bytes32' }],
+    outputs: [],
+  },
+] as const
+
+// Contract addresses - hardcoded for local Anvil demo
+// For production, these would come from env vars
+const PANTHEON_AGENT_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3'
+const BATTLE_ARENA_ADDRESS = '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9'
+const AGORA_POOL_ADDRESS = '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9'
+const BREEDING_FORGE_ADDRESS = '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707'
+const ENS_SUBNAMES_ADDRESS = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512'
+
 export const CONTRACT_ADDRESSES = {
-  pantheonAgent: (process.env.NEXT_PUBLIC_PANTHEON_AGENT ?? '0x0000000000000000000000000000000000000000') as `0x${string}`,
-  battleArena:   (process.env.NEXT_PUBLIC_BATTLE_ARENA   ?? '0x0000000000000000000000000000000000000000') as `0x${string}`,
-  agoraPool:     (process.env.NEXT_PUBLIC_AGORA_POOL      ?? '0x0000000000000000000000000000000000000000') as `0x${string}`,
-  ensSubnames:   (process.env.NEXT_PUBLIC_ENS_SUBNAME_REGISTRAR ?? '0x0000000000000000000000000000000000000000') as `0x${string}`,
+  pantheonAgent: (process.env.NEXT_PUBLIC_PANTHEON_AGENT ?? PANTHEON_AGENT_ADDRESS) as `0x${string}`,
+  battleArena:   (process.env.NEXT_PUBLIC_BATTLE_ARENA   ?? BATTLE_ARENA_ADDRESS) as `0x${string}`,
+  agoraPool:     (process.env.NEXT_PUBLIC_AGORA_POOL      ?? AGORA_POOL_ADDRESS) as `0x${string}`,
+  ensSubnames:   (process.env.NEXT_PUBLIC_ENS_SUBNAME_REGISTRAR ?? ENS_SUBNAMES_ADDRESS) as `0x${string}`,
+  breedingForge: (process.env.NEXT_PUBLIC_BREEDING_FORGE ?? BREEDING_FORGE_ADDRESS) as `0x${string}`,
 }

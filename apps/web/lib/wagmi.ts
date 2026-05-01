@@ -1,6 +1,6 @@
 // lib/wagmi.ts
 import { createConfig, http } from 'wagmi'
-import { mainnet } from 'wagmi/chains'
+import { mainnet, sepolia } from 'wagmi/chains'
 import { getDefaultConfig } from '@rainbow-me/rainbowkit'
 
 // 0G Testnet chain definition
@@ -20,9 +20,26 @@ export const ogTestnet = {
   testnet: true,
 } as const
 
+// Local Anvil chain (_foundry)
+export const localAnvil = {
+  id: 31337,
+  name: 'Local Anvil',
+  nativeCurrency: { name: 'Ethereum', symbol: 'ETH', decimals: 18 },
+  rpcUrls: {
+    default: { http: ['http://127.0.0.1:8545'] },
+  },
+  testnet: true,
+} as const
+
 export const wagmiConfig = getDefaultConfig({
   appName: 'Pantheon',
   projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ?? 'pantheon-demo',
-  chains: [ogTestnet, mainnet],
+  chains: [localAnvil, ogTestnet, mainnet, sepolia],
+  transports: {
+    [localAnvil.id]: http('http://127.0.0.1:8545'),
+    [ogTestnet.id]: http(process.env.NEXT_PUBLIC_RPC_URL ?? 'https://evmrpc-testnet.0g.ai'),
+    [mainnet.id]: http(),
+    [sepolia.id]: http(),
+  },
   ssr: true,
 })
