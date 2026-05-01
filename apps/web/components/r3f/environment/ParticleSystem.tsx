@@ -6,7 +6,6 @@ import * as THREE from 'three'
 interface ParticleSystemProps {
   type: 'embers' | 'dust'
   count?: number
-  bounds?: { min: THREE.Vector3; max: THREE.Vector3 }
 }
 
 export function ParticleSystem({ type = 'embers', count = 50 }: ParticleSystemProps) {
