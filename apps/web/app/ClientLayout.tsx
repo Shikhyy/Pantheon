@@ -11,16 +11,14 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname()
 
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body>
-        <OdysseyScene currentRoute={pathname} />
-        <Providers>
-          <main className="min-h-screen pt-20">
-            {children}
-          </main>
-          <Toaster theme="dark" toastOptions={{ className: 'font-cinzel text-xs tracking-widest uppercase bg-nox border-stone/20 text-parch' }} />
-        </Providers>
-      </body>
-    </html>
+    <>
+      <OdysseyScene currentRoute={pathname} />
+      <Providers>
+        <main className="min-h-screen pt-20 relative z-10">
+          {children}
+        </main>
+        <Toaster theme="dark" toastOptions={{ className: 'font-cinzel text-xs tracking-widest uppercase bg-nox border-stone/20 text-parch' }} />
+      </Providers>
+    </>
   )
 }
