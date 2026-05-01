@@ -27,6 +27,7 @@ export function CameraFlythrough() {
     const targetConfig = sectionCameras[activeSection]
     if (!targetConfig || activeSection === 'landing') return
 
+    gsap.killTweensOf(camera.position)
     setTransitioning(true)
 
     const timeline = gsap.timeline({
