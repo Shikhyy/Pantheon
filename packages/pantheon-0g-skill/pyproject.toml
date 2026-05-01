@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pantheon-0g-skill"
+version = "1.0.0"
+description = "OpenClaw skill modules for Pantheon: 0G Compute inference, 0G Storage memory, AI battle mechanics"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.12"
+keywords = ["openclaw", "0g", "ai-agents", "web3", "llm"]
+
+dependencies = [
+    "httpx>=0.28",
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-asyncio>=0.24", "respx>=0.21"]
+
+[project.urls]
+Repository = "https://github.com/Shikhyy/Pantheon"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+]
