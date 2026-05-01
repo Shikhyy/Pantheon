@@ -6,6 +6,12 @@ import { MOCK_AGENTS } from '@/lib/mock-data'
 import type { Agent, Archetype, Rank } from '@/lib/store'
 import { cn, getArchetypeColor, getRankClass, winRate, ARCHETYPE_ICONS } from '@/lib/utils'
 import Link from 'next/link'
+import { useGameStore } from '@/lib/store'
+import { useWriteContract, useAccount } from 'wagmi'
+import { parseEther } from 'viem'
+import { BATTLE_ARENA_ABI, CONTRACT_ADDRESSES } from '@/lib/contracts'
+import { toast } from 'sonner'
+import { playSound } from '@/components/audio/SoundEffects'
 
 const RANK_FILTERS: (Rank | 'All')[] = ['All', 'Olympian', 'Titan', 'God', 'Hero', 'Demigod']
 const SORT_OPTIONS = ['ELO', 'Win Rate', 'Battles', 'Newest']
@@ -72,6 +78,45 @@ function AgentCard({ agent, onSelect }: { agent: Agent; onSelect: (a: Agent) => 
 
 function AgentModal({ agent, onClose }: { agent: Agent; onClose: () => void }) {
   const wr = winRate(agent.wins, agent.losses)
+  const { isConnected } = useAccount()
+  const myAgents = useGameStore(s => s.ownedAgents)
+  
+  const [challengeMode, setChallengeMode] = useState(false)
+  const [selectedMyAgent, setSelectedMyAgent] = useState<Agent | null>(null)
+  const [wagerAmount, setWagerAmount] = useState('0.01')
+  
+  const { writeContractAsync: writeChallenge, isPending } = useWriteContract()
+
+  const handleIssueChallenge = async () => {
+    if (!selectedMyAgent) {
+      toast.error('Select an agent to challenge with.')
+      return
+    }
+    if (!wagerAmount || isNaN(Number(wagerAmount))) {
+      toast.error('Invalid wager amount.')
+      return
+    }
+    playSound('anvilStrike')
+    try {
+      await writeChallenge({
+        address: CONTRACT_ADDRESSES.battleArena,
+        abi: BATTLE_ARENA_ABI,
+        functionName: 'challenge',
+        args: [
+          selectedMyAgent.tokenId,
+          agent.tokenId,
+          '0x0000000000000000000000000000000000000000', // Mock Wager Token (ETH)
+          parseEther(wagerAmount)
+        ],
+        value: parseEther(wagerAmount) // Send ETH
+      })
+      toast.success('Challenge issued successfully! Awaiting KeeperHub.')
+      onClose()
+    } catch (err) {
+      console.error(err)
+      toast.error('Failed to issue challenge.')
+    }
+  }
 
   return (
     <motion.div
@@ -144,18 +189,74 @@ function AgentModal({ agent, onClose }: { agent: Agent; onClose: () => void }) {
           </div>
         )}
 
-        {/* CTA */}
-        <div className="flex gap-3">
-          <button
-            id={`challenge-${agent.name}`}
-            className="btn-gold flex-1"
-          >
-            <span>⚔ Issue Challenge</span>
-          </button>
-          <Link href={`/colosseum/demo`} className="btn-ghost">
-            Watch Live
-          </Link>
-        </div>
+        {/* CTA or Challenge Mode */}
+        {!challengeMode ? (
+          <div className="flex gap-3 mt-4">
+            <button
+              id={`challenge-${agent.name}`}
+              onClick={() => {
+                if (!isConnected) toast.error('Connect wallet to challenge.')
+                else setChallengeMode(true)
+              }}
+              className="btn-gold flex-1"
+            >
+              <span>⚔ Issue Challenge</span>
+            </button>
+            <Link href={`/colosseum/demo`} className="btn-ghost">
+              Watch Live
+            </Link>
+          </div>
+        ) : (
+          <div className="mt-6 border-t border-stone/20 pt-6">
+            <h3 className="font-cinzel text-sand mb-4">Select Your Champion</h3>
+            
+            <div className="grid grid-cols-2 gap-3 mb-4 max-h-40 overflow-y-auto">
+              {myAgents.length === 0 ? (
+                <div className="col-span-2 text-xs font-josefin text-parch/40">You do not own any agents. Forge one first.</div>
+              ) : (
+                myAgents.map(a => (
+                  <button
+                    key={a.tokenId.toString()}
+                    onClick={() => setSelectedMyAgent(a)}
+                    className={cn(
+                      'stone-card p-3 text-left transition-all',
+                      selectedMyAgent?.tokenId === a.tokenId ? 'border-sand shadow-[0_0_10px_rgba(217,167,139,0.2)] bg-deep/60' : 'hover:border-stone/40'
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">{ARCHETYPE_ICONS[a.archetype]}</span>
+                      <span className="font-cinzel text-xs text-parch">{a.name}</span>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+
+            <div className="mb-6">
+              <label className="section-label block mb-2">Wager Amount (ETH)</label>
+              <input
+                type="number"
+                value={wagerAmount}
+                onChange={(e) => setWagerAmount(e.target.value)}
+                placeholder="0.01"
+                step="0.001"
+                min="0"
+                className="w-full bg-nox border border-stone/40 text-parch font-josefin text-sm px-4 py-2 focus:outline-none focus:border-sand/40"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button onClick={() => setChallengeMode(false)} className="btn-ghost">Cancel</button>
+              <button
+                onClick={handleIssueChallenge}
+                disabled={!selectedMyAgent || isPending}
+                className={cn('btn-gold flex-1', (!selectedMyAgent || isPending) && 'opacity-30 cursor-not-allowed')}
+              >
+                <span>{isPending ? 'Confirming...' : 'Submit Challenge'}</span>
+              </button>
+            </div>
+          </div>
+        )}
       </motion.div>
     </motion.div>
   )
@@ -164,10 +265,12 @@ function AgentModal({ agent, onClose }: { agent: Agent; onClose: () => void }) {
 export default function AgoraPage() {
   const [rankFilter, setRankFilter] = useState<Rank | 'All'>('All')
   const [sortBy, setSortBy] = useState('ELO')
-  const [myAgents, setMyAgents] = useState(false)
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
 
-  const filtered = MOCK_AGENTS
+  // Use mock data for demo - in production, fetch from contract
+  const displayAgents = MOCK_AGENTS
+
+  const filtered = displayAgents
     .filter(a => rankFilter === 'All' || a.rank === rankFilter)
     .sort((a, b) => {
       if (sortBy === 'ELO') return b.elo - a.elo
