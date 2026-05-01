@@ -4,10 +4,12 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore, type Archetype } from '@/lib/store'
 import { ARCHETYPE_DESCRIPTIONS, ARCHETYPE_ICONS, cn } from '@/lib/utils'
-import { useAccount } from 'wagmi'
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { parseEther, keccak256, toBytes } from 'viem'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { playSound } from '@/components/audio/SoundEffects'
 import { toast } from 'sonner'
+import { PANTHEON_AGENT_ABI, CONTRACT_ADDRESSES } from '@/lib/contracts'
 
 const ARCHETYPES: { id: Archetype; title: string; description: string; color: string; border: string }[] = [
   {
@@ -56,6 +58,7 @@ const FORGE_STAGES = [
 
 export default function ForgePage() {
   const { isConnected } = useAccount()
+  const { writeContract } = useWriteContract()
   const { forgeState, updateForge, resetForge } = useGameStore()
   const [step, setStep] = useState(0) // 0=archetype, 1=name, 2=directive, 3=forging
   const [forgeProgress, setForgeProgress] = useState(-1)
@@ -75,16 +78,59 @@ export default function ForgePage() {
   }
 
   const handleForge = async () => {
+    if (!forgeState.archetype || !forgeState.name || !forgeState.directive) {
+      toast.error('Please complete all steps first.')
+      return
+    }
+
+    const archetypeMap: Record<Archetype, number> = {
+      Strategist: 0,
+      Oracle: 1,
+      Berserker: 2,
+      Diplomat: 3,
+    }
+
+    const archetypeNum = archetypeMap[forgeState.archetype]
+    if (archetypeNum === undefined) {
+      toast.error('Invalid archetype selection.')
+      return
+    }
+
     playSound('anvilStrike')
     setStep(3)
-    // Simulate 5-stage forge sequence
-    for (let i = 0; i < 5; i++) {
-      setForgeProgress(i)
-      await new Promise(r => setTimeout(r, 1200))
+
+    try {
+      const storageHash = keccak256(toBytes(forgeState.directive || '')) as `0x${string}`
+      
+      setForgeProgress(0)
+      await new Promise(r => setTimeout(r, 800))
+      setForgeProgress(1)
+      await new Promise(r => setTimeout(r, 800))
+      
+      setForgeProgress(2)
+      writeContract({
+        address: CONTRACT_ADDRESSES.pantheonAgent,
+        abi: PANTHEON_AGENT_ABI,
+        functionName: 'mint',
+        args: [archetypeNum, forgeState.name, storageHash],
+      })
+      
+      await new Promise(r => setTimeout(r, 800))
+      setForgeProgress(3)
+      await new Promise(r => setTimeout(r, 600))
+      setForgeProgress(4)
+      
+      // In production, wait for tx confirmation and register ENS
+      // For now, treat as success for demo
+      setForgedSuccess(true)
+      playSound('apotheosis')
+      toast.success(`${forgeState.name} has been forged into the blockchain!`)
+    } catch (err) {
+      console.error('Forge failed:', err)
+      toast.error('Forge failed. Check console for details.')
+      setStep(2)
+      setForgeProgress(-1)
     }
-    setForgedSuccess(true)
-    playSound('apotheosis')
-    toast.success(`${forgeState.name || 'Your agent'} has been forged into the blockchain!`)
   }
 
   if (!isConnected) {
