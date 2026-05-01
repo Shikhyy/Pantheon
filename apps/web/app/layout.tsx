@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
+import { usePathname } from 'next/navigation'
 import { Providers } from '@/components/Providers'
 import { Toaster } from 'sonner'
+import OdysseyScene from '@/components/r3f/OdysseyScene'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -22,9 +24,12 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
+        <OdysseyScene currentRoute={pathname} />
         <Providers>
           <main className="min-h-screen pt-20">
             {children}
