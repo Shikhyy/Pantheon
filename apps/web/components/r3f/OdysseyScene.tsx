@@ -77,17 +77,27 @@ export default function OdysseyScene({ currentRoute }: OdysseySceneProps) {
   const { setActiveSection } = useOdysseyStore()
 
   useEffect(() => {
-    const sectionMap: Record<string, OdysseySection> = {
-      '/': 'landing',
-      '/dashboard': 'dashboard',
-      '/agora': 'agora',
-      '/legends': 'legends',
-      '/forge': 'forge',
-      '/colosseum': 'battle',
+    const path = currentRoute.startsWith('/') ? currentRoute : '/' + currentRoute
+    const firstSegment = '/' + path.split('/')[1]
+    const secondSegment = path.split('/')[2]
+
+    let section: OdysseySection = 'landing'
+
+    if (firstSegment === '/colosseum' && secondSegment) {
+      section = 'battle'
+    } else if (firstSegment === '/colosseum' && !secondSegment) {
+      section = 'landing'
+    } else {
+      const sectionMap: Record<string, OdysseySection> = {
+        '/': 'landing',
+        '/dashboard': 'dashboard',
+        '/agora': 'agora',
+        '/legends': 'legends',
+        '/forge': 'forge',
+      }
+      section = sectionMap[firstSegment] || 'landing'
     }
 
-    const basePath = '/' + currentRoute.split('/')[1]
-    const section = sectionMap[basePath] || 'landing'
     setActiveSection(section)
   }, [currentRoute, setActiveSection])
 
