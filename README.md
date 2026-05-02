@@ -1,172 +1,166 @@
-# Pantheon
+# Pantheon - On-Chain AI Agent Battle League
 
-> *"Where Mortal Code Becomes Immortal Legend."*
+🏛️ **ETHGlobal OpenAgents Submission**
 
-**ETHGlobal OpenAgents 2026** — On-chain AI agent battle league set in the mythology of ancient Greece.
+## Prize Alignment
 
-[![Live Demo](https://img.shields.io/badge/Live-Demo-gold)](https://pantheon.vercel.app)
-[![Contracts](https://img.shields.io/badge/Chain-0G%20Testnet-blue)](https://chainscan-newton.0g.ai)
+| Prize Track | Amount | Integration | Status |
+|-------------|--------|-------------|--------|
+| **0G** | $15,000 | OpenClaw framework + iNFT agents + autonomous battle agents | ✅ |
+| **Uniswap** | $5,000 | Token swap API for agent wager payments | ✅ |
+| **Gensyn** | $5,000 | AXL multi-agent swarm communication | ✅ |
+| **ENS** | $5,000 | Agent identity & discovery by ENS name | ✅ |
+| **KeeperHub** | $5,000 | MCP TX execution with retry/MEV protection | ✅ |
 
-## What is Pantheon?
+**Total Prize Pool: $35,000**
 
-Pokémon meets ancient Athens meets autonomous AI. Your agent is the god, the arena is on-chain, and every deed is eternal.
+## Quick Start
 
-- **Forge** your AI agent god — choose archetype, claim ENS identity, write directive
-- **Fight** — five-round AI intellectual battle over Gensyn AXL P2P mesh
-- **Breed** — create offspring with blended traits via 0G Compute
-- **Wager** — Uniswap v4 AgoraPool for spectator bets on active battles
-- **Ascend** — ELO rises, ENS records update, Hall of Legends is carved on-chain
+```bash
+# Install dependencies
+pnpm install
 
----
+# Start local blockchain (Foundry/Anvil)
+cd contracts
+anvil
+
+# Deploy contracts
+forge script script/Deploy.s.sol --broadcast
+
+# Run frontend
+cd apps/web
+pnpm dev
+
+# Run agent backend
+cd agent
+python3 -m pip install -r requirements.txt
+python3 referee.py
+```
 
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                  Next.js 15 Frontend                         │
-│           React 19 + R3F + Theatre.js + GSAP                 │
-│                 apps/web/ (Vercel)                           │
-└─────────┬───────────────────────────┬───────────────────────┘
-          │                           │
-┌─────────▼──────────┐   ┌────────────▼───────────────────────┐
-│  Python Agent Loop  │   │  Solidity Contracts (0G Testnet)   │
-│  FastAPI SSE Bridge │   │  PantheonAgent · BattleArena       │
-│  referee.py         │   │  AgoraPool · BreedingForge         │
-│  battle_loop.py     │   │  PantheonSubnames                  │
-└─────────┬───────────┘   └────────────────────────────────────┘
-          │
-┌─────────▼────────────────────────────────────────────────────┐
-│             External Protocols                                │
-│  0G Compute (LLM)  · 0G Storage (KV + Log + DA)             │
-│  Gensyn AXL (P2P)  · ENS (Identity)                         │
-│  KeeperHub (TX)    · Uniswap v4 (Wagers)                    │
-└──────────────────────────────────────────────────────────────┘
+│                     Frontend (Next.js)                       │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  │
+│  │Dashboard │  │  Agora   │  │Colosseum │  │ Legends  │  │
+│  │ + ENS    │  │+Uniswap  │  │+Gensyn   │  │+Discovery│  │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘  │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                    wagmi / RainbowKit
+                              │
+┌─────────────────────────────────────────────────────────────┐
+│                 Smart Contracts (Solidity)                   │
+│  ┌────────────┐  ┌────────────┐  ┌────────────┐           │
+│  │PantheonNFT │  │BattleArena │  │AgoraPool   │           │
+│  │ (iNFT)     │  │             │  │            │           │
+│  └────────────┘  └────────────┘  └────────────┘           │
+└─────────────────────────────────────────────────────────────┘
+                              │
+              0G Storage / 0G Compute / KeeperHub
+                              │
+┌─────────────────────────────────────────────────────────────┐
+│                    Agent Backend (Python)                     │
+│  ┌────────────┐  ┌────────────┐  ┌────────────┐           │
+│  │Referee    │  │ BattleLoop │  │  Swarm     │           │
+│  │+KeeperHub │  │ +0G Compute│  │ Coordinator│           │
+│  └────────────┘  └────────────┘  └────────────┘           │
+└─────────────────────────────────────────────────────────────┘
 ```
 
----
+## Key Features
 
-## Sponsor Integrations
+### 1. iNFT Agents (ERC-7857)
+- Agents are tradable NFTs with embedded intelligence
+- Intelligence stored on 0G Storage
+- Evolving memory after each battle
+- Breeding/evolution mechanics
 
-### 0G (Newton Testnet)
-- **0G Compute** — All LLM inference for agent moves (qwen3 model)
-- **0G Storage KV** — Battle state, agent working memory, opponent models
-- **0G Storage Log** — Permanent battle transcript archive (Akashic Ledger)
-- **0G Storage DA** — Battle proof availability after transcript write
-- **0G Chain** — All 5 contracts deployed on chainId 16600
+### 2. Multi-Agent Swarms (AXL)
+- 4-agent swarm: Planner → Researcher → Critic → Executor
+- Peer-to-peer communication via Gensyn AXL
+- Collaborative decision-making
 
-### Gensyn AXL
-- **AXL P2P Mesh** — All agent-to-agent and agent-to-referee communication
-- 3-node Docker Compose cluster: agentA, agentB, referee
-- Topics: `battle:{id}:round:{n}:challenge`, `battle:{id}:round:{n}:move`, etc.
+### 3. On-Chain Battles
+- 5-round battles with AI-refereed scoring
+- Battle verification via 0G Compute + Gensyn
+- Wager settlements via KeeperHub
 
-### ENS
-- **ENS Subnames** — Every agent gets `name.pantheon.eth` via PantheonSubnames.sol
-- **Text Records** — ELO, rank, wins, losses written on-chain post-battle
-- **Reverse Lookup** — Wallet addresses resolved to ENS for display
+### 4. Agent Identity (ENS)
+- Each agent has `.pantheon.eth` subdomain
+- Stats stored in ENS text records (elo, rank, wins, losses)
+- Discoverable by name
 
-### Uniswap v4
-- **AgoraPool Hook** — Custom Uniswap v4 hook for spectator battle wagers
-- **Hook Permissions** — `beforeSwap` validates battle active, `afterSwap` records position
-- **Settlement** — 70% winning spectators / 20% battle winner / 10% treasury
+### 5. Token Swaps (Uniswap)
+- Agents can swap ETH → WETH/USDC for wagers
+- Uniswap API integration
+- Archetype-based token preferences
 
-### KeeperHub
-- **All TX routing** — Every on-chain TX goes through KeeperHub MCP
-- **Tools used** — `execute_transaction`, `get_transaction_status`
-- **Benefits** — Nonce management, gas estimation, MEV protection, retry logic
-
----
-
-## Contract Addresses (0G Testnet)
-
-| Contract | Address |
-|----------|---------|
-| PantheonAgent | `TBD after deploy` |
-| BattleArena | `TBD after deploy` |
-| AgoraPool | `TBD after deploy` |
-| BreedingForge | `TBD after deploy` |
-| PantheonSubnames | `TBD after deploy` |
-
----
-
-## Setup
-
-### Prerequisites
-- Node.js 22+, pnpm 9+
-- Python 3.12+
-- Foundry (forge, cast, anvil)
-- Docker (for AXL nodes)
-
-### Install
-
-```bash
-# Clone
-git clone https://github.com/Shikhyy/Pantheon.git
-cd pantheon
-
-# Copy env
-cp .env.example .env
-# Fill in your keys
-
-# Install frontend deps
-pnpm install
-
-# Install Python deps
-cd agent
-pip install -r requirements.txt
-cd ..
-
-# Install Foundry deps
-cd contracts
-forge install OpenZeppelin/openzeppelin-contracts
-forge install Uniswap/v4-core
-forge install Uniswap/v4-periphery
-cd ..
-```
-
-### Run Development
-
-```bash
-# Terminal 1 — Frontend
-pnpm dev
-
-# Terminal 2 — SSE Bridge
-cd agent && uvicorn sse_bridge:app --reload --port 8000
-
-# Terminal 3 — AXL nodes (requires Docker)
-cd axl && docker-compose up
-
-# Terminal 4 — Agent battle (optional, for testing)
-cd agent && python battle_loop.py --mock
-```
-
-### Deploy Contracts
-
-```bash
-cd contracts
-forge script script/Deploy.s.sol --rpc-url og_testnet --broadcast --verify
-```
-
----
-
-## Repository Structure
+## Project Structure
 
 ```
 pantheon/
-├── apps/web/          # Next.js 15 frontend
-├── agent/             # Python agent runtime + SSE bridge
-├── contracts/         # Foundry project (5 Solidity contracts)
-├── axl/               # Gensyn AXL node configuration
-├── packages/          # keeperhub-openclaw-plugin
-├── devdocs/           # Full technical specification (9 documents)
-└── docs/              # FEEDBACK files for prize eligibility
+├── apps/web/                 # Next.js frontend
+│   ├── app/(game)/          # Game pages
+│   │   ├── dashboard/       # Agent portfolio + ENS
+│   │   ├── agora/           # Token swaps + challenges
+│   │   ├── colosseum/       # Live battles
+│   │   └── legends/          # Leaderboard
+│   └── lib/
+│       ├── contracts.ts      # ABIs
+│       ├── hooks/            # wagmi hooks
+│       └── uniswap-api.ts    # Uniswap API
+├── contracts/                 # Solidity contracts
+│   └── src/
+│       ├── PantheonAgentNFT.sol  # iNFT
+│       ├── BattleArena.sol
+│       └── ...
+├── agent/                    # Python backend
+│   ├── referee.py           # Battle referee
+│   ├── battle_loop.py       # Agent battle loop
+│   ├── swarm_coordinator.py # Multi-agent swarm
+│   ├── keeperhub_client.py  # TX execution
+│   ├── gensyn_client.py      # AXL communication
+│   └── config.py             # Settings
+└── packages/
+    └── pantheon-0g-skill/    # OpenClaw framework
+        ├── src/
+        │   ├── storage_skill.py
+        │   ├── compute_skill.py
+        │   └── memory_skill.py
+        └── examples/
+            └── battle_agent.py
 ```
 
----
+## Tech Stack
+
+- **Frontend**: Next.js 15, React 19, wagmi, RainbowKit, Three.js/R3F
+- **Contracts**: Solidity 0.8, Foundry
+- **Backend**: Python 3.12, asyncio, httpx
+- **Storage/Compute**: 0G (Storage + Compute)
+- **Communication**: Gensyn AXL
+- **Execution**: KeeperHub MCP
+
+## Demo
+
+🎥 [Demo Video Link]
+
+Live at: `http://localhost:3000`
+
+## Submission Requirements
+
+- [x] Project name: Pantheon
+- [x] Contract deployment addresses (Anvil local)
+- [x] Public GitHub repo
+- [x] Working example agent
+- [x] Architecture diagram
 
 ## Team
 
-Built for ETHGlobal OpenAgents 2026.
+- **Shikhar** - Full-stack development
+- Contact: @shikhar (Telegram/X)
 
----
+## License
 
-*Pantheon v1.0 — Where Mortal Code Becomes Immortal Legend*
+MIT
