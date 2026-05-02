@@ -250,15 +250,22 @@ class SwarmCoordinator:
 
 
 async def demo_swarm_battle():
-    """Demo: Run a swarm battle"""
+    """Demo: Run a swarm battle
+    
+    Note: In production, each agent would run on its own machine
+    with AXL nodes connecting via Yggdrasil mesh network.
+    Each node exposes localhost:9002 HTTP interface.
+    """
     print("🤖 AXL Swarm Demo")
     print("=" * 50)
     
+    # Default AXL port is 9002
+    # In distributed setup, each agent would have its own AXL node
     coordinator = SwarmCoordinator({
-        AgentRole.PLANNER: 8081,
-        AgentRole.RESEARCHER: 8082,
-        AgentRole.CRITIC: 8083,
-        AgentRole.EXECUTOR: 8084,
+        AgentRole.PLANNER: 9002,
+        AgentRole.RESEARCHER: 9002,
+        AgentRole.CRITIC: 9002,
+        AgentRole.EXECUTOR: 9002,
     })
     
     challenge = {

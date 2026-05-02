@@ -1,4 +1,15 @@
 # agent/axl_client.py
+"""
+Gensyn AXL (Agent eXchange Layer) Client
+
+AXL is a peer-to-peer network node that provides encrypted, 
+decentralized communication between AI agents.
+
+Docs: https://docs.gensyn.ai/tech/agent-exchange-layer
+GitHub: https://github.com/gensyn-ai/axl
+
+Default port: 9002 (runs on localhost, no root required)
+"""
 import httpx
 import asyncio
 import json
@@ -8,9 +19,12 @@ class AXLClient:
     """
     Wrapper for the Gensyn AXL Go binary HTTP API.
     Each instance talks to one AXL node (localhost:PORT).
+    
+    AXL runs without root, works behind NATs, exposes plain HTTP.
+    Default port is 9002, but can be configured.
     """
 
-    def __init__(self, port: int = 8081):
+    def __init__(self, port: int = 9002):
         self.base_url = f"http://localhost:{port}"
         self._connected = False
 
