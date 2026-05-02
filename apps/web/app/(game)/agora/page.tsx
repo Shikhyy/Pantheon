@@ -11,6 +11,7 @@ import { useWriteContract, useAccount, useReadContract } from 'wagmi'
 import { parseEther } from 'viem'
 import { BATTLE_ARENA_ABI, CONTRACT_ADDRESSES, IERC20_ABI } from '@/lib/contracts'
 import { useTokenSwap, useTokenApproval, getFeeTier } from '@/lib/hooks/use-token-swap'
+import { getRecommendedToken } from '@/lib/uniswap-api'
 import { toast } from 'sonner'
 import { playSound } from '@/components/audio/SoundEffects'
 
