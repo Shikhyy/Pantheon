@@ -3,8 +3,53 @@
 import { useAccount } from 'wagmi'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { MOCK_AGENTS } from '@/lib/mock-data'
+import { useAgentENS } from '@/lib/hooks/use-ens'
 import { cn, ARCHETYPE_ICONS, getRankClass, winRate } from '@/lib/utils'
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
+
+function AgentCard({ tokenId, name, archetype, mockElo }: { tokenId: bigint; name: string; archetype: string; mockElo: number }) {
+  const { elo, rank, wins, losses, isLoading } = useAgentENS(Number(tokenId))
+  const [mounted, setMounted] = useState(false)
+  
+  useEffect(() => setMounted(true), [])
+  
+  const displayElo = mounted && elo ? parseInt(elo) : mockElo
+  const displayRank = mounted && rank ? rank : 'Challenger'
+  const displayWins = mounted && wins ? parseInt(wins) : 0
+  const displayLosses = mounted && losses ? parseInt(losses) : 0
+  
+  const icon = ARCHETYPE_ICONS[archetype as keyof typeof ARCHETYPE_ICONS] || '⚔️'
+  
+  return (
+    <div className="stone-card p-5 flex items-center gap-4">
+      <span className="text-3xl">{icon}</span>
+      <div className="flex-1">
+        <div className="font-cinzel text-sm text-sand">{name}</div>
+        <div className="section-label text-[7px] text-parch/30">
+          {tokenId}.pantheon.eth
+        </div>
+      </div>
+      <div className="text-right">
+        <div className="font-cinzel text-lg text-gold">
+          {isLoading ? '...' : displayElo.toLocaleString()}
+        </div>
+        <div className="section-label text-[6px]">ELO</div>
+        <div className="font-josefin text-[8px] text-parch/40">
+          {displayWins}W - {displayLosses}L
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <Link href="/agora" className="btn-ghost text-[7px] px-3 py-1.5">
+          Challenge
+        </Link>
+        <Link href="/colosseum/demo" className="btn-ghost text-[7px] px-3 py-1.5">
+          Watch
+        </Link>
+      </div>
+    </div>
+  )
+}
 
 const MOCK_KEEPER_TXS = [
   { hash: '0x1234...abcd', method: 'submitResult', status: 'confirmed', timestamp: Date.now() - 3600000 },
@@ -37,7 +82,7 @@ export default function DashboardPage() {
     )
   }
 
-  const myAgents = MOCK_AGENTS.slice(0, 2) // Simulate owned agents
+  const myAgents = MOCK_AGENTS.slice(0, 2)
 
   return (
     <div className="min-h-screen pt-24 pb-16 px-6">
@@ -61,25 +106,13 @@ export default function DashboardPage() {
             <div className="section-label mb-4">My Agents</div>
             <div className="space-y-3">
               {myAgents.map(agent => (
-                <div key={agent.tokenId.toString()} className="stone-card p-5 flex items-center gap-4">
-                  <span className="text-3xl">{ARCHETYPE_ICONS[agent.archetype]}</span>
-                  <div className="flex-1">
-                    <div className="font-cinzel text-sm text-sand">{agent.name}</div>
-                    <div className="section-label text-[7px] text-parch/30">{agent.ensName}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-cinzel text-lg text-gold">{agent.elo.toLocaleString()}</div>
-                    <div className="section-label text-[6px]">ELO</div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Link href="/agora" className="btn-ghost text-[7px] px-3 py-1.5">
-                      Challenge
-                    </Link>
-                    <Link href="/colosseum/demo" className="btn-ghost text-[7px] px-3 py-1.5">
-                      Watch
-                    </Link>
-                  </div>
-                </div>
+                <AgentCard
+                  key={agent.tokenId.toString()}
+                  tokenId={agent.tokenId}
+                  name={agent.name}
+                  archetype={agent.archetype}
+                  mockElo={agent.elo}
+                />
               ))}
               <Link href="/forge" className="flex items-center justify-center gap-2 border border-dashed border-stone/30 text-parch/20 hover:text-parch/40 hover:border-stone/50 transition-all p-4 font-cinzel text-[8px] tracking-widest uppercase">
                 + Forge New Agent
