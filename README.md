@@ -14,35 +14,6 @@
 
 **Total Prize Pool: $35,000**
 
-## Integration Resources
-
-### 0G Resources
-- **Builder Hub**: https://build.0g.ai
-- **Telegram Support**: https://t.me/+mQmldXXVBGpkODU1
-- **RPC**: https://evmrpc-testnet.0g.ai
-- **Storage**: https://storage-testnet.0g.ai
-- **Compute**: https://compute-testnet.0g.ai
-
-### Uniswap Resources
-- **Developer Platform**: https://developers.uniswap.org/
-- **Uniswap AI**: https://github.com/Uniswap/uniswap-ai
-
-### Gensyn (AXL) Resources
-- **AXL Documentation**: https://docs.gensyn.ai/tech/agent-exchange-layer
-- **AXL GitHub**: https://github.com/gensyn-ai/axl
-- **Collaborative Autoresearch Demo**: https://github.com/gensyn-ai/collaborative-autoresearch-demo
-- **Default Port**: 9002 (localhost HTTP interface)
-
-### ENS Resources
-- **Documentation**: https://docs.ens.domains/
-- **Building with AI**: https://docs.ens.domains/building-with-ai/
-
-### KeeperHub Resources
-- **MCP Docs**: https://docs.keeperhub.com/ai-tools
-- **API Docs**: https://docs.keeperhub.com/api
-- **Platform**: https://app.keeperhub.com/
-- **CLI**: https://docs.keeperhub.com/cli
-
 ## Quick Start
 
 ```bash
@@ -68,25 +39,7 @@ python3 referee.py
 
 ## Environment Setup
 
-Create `.env` in root:
-
-```bash
-# 0G Configuration
-OG_RPC_URL=https://evmrpc-testnet.0g.ai
-OG_COMPUTE_URL=https://compute-testnet.0g.ai
-OG_STORAGE_URL=https://storage-testnet.0g.ai
-OG_CHAIN_ID=16600
-
-# KeeperHub (MCP for TX execution)
-KEEPERHUB_MCP_URL=https://api.keeperhub.io/mcp
-KEEPERHUB_API_KEY=your_api_key
-
-# Uniswap API
-NEXT_PUBLIC_UNISWAP_API_KEY=your_uniswap_key
-
-# ENS
-NEXT_PUBLIC_ENS_SUBNAME_REGISTRAR=0x...
-```
+Create `.env` with your API keys and configuration as needed.
 
 ## Architecture
 
@@ -122,43 +75,32 @@ NEXT_PUBLIC_ENS_SUBNAME_REGISTRAR=0x...
 
 ## Key Features
 
-### 1. iNFT Agents (ERC-7857) - 0G Integration
+### 1. iNFT Agents (ERC-7857)
 - Agents are tradable NFTs with embedded intelligence
-- Intelligence stored on **0G Storage** (hash stored in contract)
+- Intelligence stored on 0G Storage (hash stored in contract)
 - Evolving memory after each battle
 - Breeding/evolution mechanics
-- Deployed to: 0G testnet (chain ID 16600)
 
-### 2. Multi-Agent Swarms (AXL) - Gensyn Integration
+### 2. Multi-Agent Swarms (AXL)
 - 4-agent swarm: Planner → Researcher → Critic → Executor
-- **AXL** provides peer-to-peer encrypted communication
+- AXL provides peer-to-peer encrypted communication
 - Each agent runs AXL node on localhost:9002
 - No central server, Yggdrasil mesh networking
-- Supports MCP and A2A protocols for structured communication
 
-### 3. On-Chain Battles - KeeperHub Integration
+### 3. On-Chain Battles
 - 5-round battles with AI-refereed scoring
 - Battle verification via 0G Compute
-- **KeeperHub** handles all on-chain TX with:
-  - Retry logic on failure
-  - Gas optimization
-  - MEV protection
-  - Full audit trail
+- KeeperHub handles all on-chain TX
 
-### 4. Agent Identity (ENS) Integration
+### 4. Agent Identity (ENS)
 - Each agent has `.pantheon.eth` subdomain
 - Stats stored in ENS text records (elo, rank, wins, losses)
 - Discoverable by ENS name lookup
-- Fully on-chain, portable identity
 
-### 5. Token Swaps (Uniswap) Integration
+### 5. Token Swaps (Uniswap)
 - Agents can swap ETH → WETH/USDC for wagers
-- **Uniswap API** for quote fetching
-- Archetype-based token preferences:
-  - Strategist → USDC (stable)
-  - Berserker → WETH (risk)
-  - Oracle → DAI (conservative)
-  - Diplomat → USDT (balanced)
+- Uniswap API for quote fetching
+- Archetype-based token preferences
 
 ## Project Structure
 
