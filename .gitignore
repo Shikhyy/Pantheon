@@ -45,3 +45,6 @@ coverage/
 
 # Theatre.js studio state
 .theatre/
+
+# Worktrees
+.worktrees/
