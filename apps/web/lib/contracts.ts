@@ -190,6 +190,114 @@ export const AGORA_POOL_ABI = [
   },
 ] as const
 
+export const ENS_SUBNAMES_ABI = [
+  {
+    name: 'setText',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'node', type: 'bytes32' },
+      { name: 'key', type: 'string' },
+      { name: 'value', type: 'string' },
+    ],
+    outputs: [],
+  },
+  {
+    name: 'text',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'node', type: 'bytes32' },
+      { name: 'key', type: 'string' },
+    ],
+    outputs: [{ name: '', type: 'string' }],
+  },
+  {
+    name: 'name',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'node', type: 'bytes32' }],
+    outputs: [{ name: '', type: 'string' }],
+  },
+] as const
+
+export const IERC20_ABI = [
+  {
+    name: 'approve',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'spender', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
+    outputs: [{ name: '', type: 'bool' }],
+  },
+  {
+    name: 'allowance',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'owner', type: 'address' },
+      { name: 'spender', type: 'address' },
+    ],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    name: 'balanceOf',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'account', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+] as const
+
+export const UNISWAP_V3_ROUTER_ABI = [
+  {
+    name: 'exactInputSingle',
+    type: 'function',
+    stateMutability: 'payable',
+    inputs: [
+      { name: 'params', type: 'tuple', components: [
+        { name: 'tokenIn', type: 'address' },
+        { name: 'tokenOut', type: 'address' },
+        { name: 'fee', type: 'uint24' },
+        { name: 'recipient', type: 'address' },
+        { name: 'deadline', type: 'uint256' },
+        { name: 'amountIn', type: 'uint256' },
+        { name: 'amountOutMinimum', type: 'uint256' },
+        { name: 'sqrtPriceLimitX96', type: 'uint160' },
+      ]},
+    ],
+    outputs: [{ name: 'amountOut', type: 'uint256' }],
+  },
+  {
+    name: 'exactOutputSingle',
+    type: 'function',
+    stateMutability: 'payable',
+    inputs: [
+      { name: 'params', type: 'tuple', components: [
+        { name: 'tokenIn', type: 'address' },
+        { name: 'tokenOut', type: 'address' },
+        { name: 'fee', type: 'uint24' },
+        { name: 'recipient', type: 'address' },
+        { name: 'deadline', type: 'uint256' },
+        { name: 'amountOut', type: 'uint256' },
+        { name: 'amountInMaximum', type: 'uint256' },
+        { name: 'sqrtPriceLimitX96', type: 'uint160' },
+      ]},
+    ],
+    outputs: [{ name: 'amountIn', type: 'uint256' }],
+  },
+] as const
+
+const UNISWAP_V3_ROUTER_MAINNET = '0xE592427A0AEce92De3Edee1F18E0157C05861564'
+const UNISWAP_V3_ROUTER_SEPOLIA = '0x3bFA4769FB09e5C2F2dB9844f1d6f8FB6f1D8b44'
+
+export function getUniswapRouterAddress(chainId: number): `0x${string}` {
+  if (chainId === 16600 || chainId === 1) return UNISWAP_V3_ROUTER_MAINNET
+  return UNISWAP_V3_ROUTER_SEPOLIA as `0x${string}`
+}
+
 // Contract addresses - hardcoded for local Anvil demo
 // For production, these would come from env vars
 const PANTHEON_AGENT_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3'
