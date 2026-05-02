@@ -1,145 +1,101 @@
 """
-0G Compute skill for OpenClaw.
-Wraps 0G Compute API as an OpenClaw-compatible skill.
-Any OpenClaw agent can import this to get LLM inference on 0G.
+0G Compute skill for verifiable battle computation.
 """
 import httpx
-from typing import Optional
+import json
+from typing import Any, Optional
 from dataclasses import dataclass
+
+try:
+    from agent.config import settings
+    CONFIG_AVAILABLE = True
+except ImportError:
+    CONFIG_AVAILABLE = False
 
 
 @dataclass
 class ComputeConfig:
-    base_url: str
-    api_key: str
-    default_model: str = "qwen3"
-    default_max_tokens: int = 800
-    default_temperature: float = 0.7
-    timeout: float = 30.0
+    """Configuration for 0G Compute skill."""
+    base_url: str = "https://compute-testnet.0g.ai"
+    api_key: str = ""
 
 
 class ZeroGComputeSkill:
     """
-    OpenClaw skill: LLM inference via 0G Compute.
+    OpenClaw skill: verifiable compute via 0G Compute.
 
-    Registration:
-        agent.register_skill("llm_infer", ZeroGComputeSkill(config).infer)
-        agent.register_skill("llm_chat",  ZeroGComputeSkill(config).chat)
-
-    Usage in agent:
-        response = await agent.use_skill("llm_infer", prompt="What is 2+2?")
+    Registers:
+        compute_submit    → submit computation for verification
+        compute_status    → check computation status
+        compute_result    → retrieve computation result
+        compute_verify   → verify proof on-chain
     """
 
-    skill_name    = "0g-compute"
+    skill_name = "0g-compute"
     skill_version = "1.0.0"
     skill_description = (
-        "LLM inference via 0G Compute. Supports qwen3, GLM-5. "
-        "Exposes: infer (single prompt), chat (multi-turn), batch (parallel calls)."
+        "Verifiable compute via 0G. Submit computations, get proofs, "
+        "verify on-chain for battle verification."
     )
 
-    def __init__(self, config: ComputeConfig):
-        self.config = config
+    def __init__(self, base_url: str = None):
+        if CONFIG_AVAILABLE:
+            self.base_url = base_url or settings.OG_COMPUTE_URL or "https://compute-testnet.0g.ai"
+        else:
+            self.base_url = base_url or "https://compute-testnet.0g.ai"
 
     def register(self, agent) -> None:
-        """Register all compute skills with an OpenClaw agent."""
-        agent.add_skill("llm_infer",    self.infer)
-        agent.add_skill("llm_chat",     self.chat)
-        agent.add_skill("llm_batch",    self.batch)
-        agent.add_skill("llm_blend",    self.blend)
+        agent.add_skill("compute_submit", self.compute_submit)
+        agent.add_skill("compute_status", self.compute_status)
+        agent.add_skill("compute_result", self.compute_result)
+        agent.add_skill("compute_verify", self.compute_verify)
 
-    async def infer(
-        self,
-        prompt: str,
-        system: str = "You are a helpful AI assistant.",
-        model: Optional[str] = None,
-        temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,
-    ) -> str:
-        """Single-turn LLM inference."""
-        return await self._call(
-            messages=[
-                {"role": "system", "content": system},
-                {"role": "user",   "content": prompt},
-            ],
-            model=model,
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
-
-    async def chat(
-        self,
-        messages: list[dict],
-        model: Optional[str] = None,
-        temperature: Optional[float] = None,
-    ) -> str:
-        """Multi-turn chat completion."""
-        return await self._call(
-            messages=messages,
-            model=model,
-            temperature=temperature,
-        )
-
-    async def batch(
-        self,
-        prompts: list[str],
-        system: str = "You are a helpful AI assistant.",
-        model: Optional[str] = None,
-    ) -> list[str]:
-        """Parallel batch inference — runs all prompts concurrently."""
-        import asyncio
-        tasks = [self.infer(p, system=system, model=model) for p in prompts]
-        return await asyncio.gather(*tasks)
-
-    async def blend(
-        self,
-        text_a: str,
-        text_b: str,
-        weight_a: float = 0.6,
-        style: str = "personality",
-    ) -> str:
+    async def compute_submit(self, program: str, input_data: Any) -> dict:
         """
-        Blend two texts at a given weight ratio.
-        Used for agent directive blending in breeding.
-
-        style options: personality, strategy, creative
+        Submit a computation for verifiable execution.
+        Returns {computeId, status, proof}.
         """
-        style_instructions = {
-            "personality": "Create a new personality that blends these two in the given ratio.",
-            "strategy":    "Synthesise a new strategy combining elements of both approaches.",
-            "creative":    "Create something genuinely new inspired by both sources.",
+        payload = {
+            "program": program,
+            "input": input_data,
+            "verifiable": True,
         }
-
-        return await self.infer(
-            prompt=(
-                f"TEXT A ({int(weight_a * 100)}% influence): {text_a}\n\n"
-                f"TEXT B ({int((1-weight_a) * 100)}% influence): {text_b}\n\n"
-                f"{style_instructions.get(style, style_instructions['personality'])}\n"
-                "Respond with ONLY the blended result. No explanation."
-            ),
-            temperature=0.65,
-            max_tokens=200,
-        )
-
-    async def _call(
-        self,
-        messages: list[dict],
-        model: Optional[str] = None,
-        temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,
-    ) -> str:
-        async with httpx.AsyncClient(timeout=self.config.timeout) as client:
-            resp = await client.post(
-                f"{self.config.base_url}/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {self.config.api_key}",
-                    "Content-Type":  "application/json",
-                },
-                json={
-                    "model":       model       or self.config.default_model,
-                    "messages":    messages,
-                    "temperature": temperature or self.config.default_temperature,
-                    "max_tokens":  max_tokens  or self.config.default_max_tokens,
-                },
+        async with httpx.AsyncClient(timeout=60.0) as c:
+            resp = await c.post(
+                f"{self.base_url}/compute/submit",
+                json=payload
             )
             resp.raise_for_status()
-            return resp.json()["choices"][0]["message"]["content"]
+            return resp.json()
+
+    async def compute_status(self, compute_id: str) -> dict:
+        """Check status of a computation."""
+        async with httpx.AsyncClient(timeout=10.0) as c:
+            resp = await c.get(f"{self.base_url}/compute/{compute_id}/status")
+            resp.raise_for_status()
+            return resp.json()
+
+    async def compute_result(self, compute_id: str) -> Optional[dict]:
+        """Retrieve computation result."""
+        async with httpx.AsyncClient(timeout=10.0) as c:
+            resp = await c.get(f"{self.base_url}/compute/{compute_id}/result")
+            if resp.status_code == 404:
+                return None
+            resp.raise_for_status()
+            return resp.json()
+
+    async def compute_verify(self, compute_id: str, proof: str) -> bool:
+        """
+        Verify proof on-chain.
+        Returns True if verified.
+        """
+        payload = {
+            "compute_id": compute_id,
+            "proof": proof,
+        }
+        async with httpx.AsyncClient(timeout=30.0) as c:
+            resp = await c.post(
+                f"{self.base_url}/compute/verify",
+                json=payload
+            )
+            return resp.status_code == 200

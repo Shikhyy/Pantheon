@@ -7,14 +7,89 @@ import type { Agent, Archetype, Rank } from '@/lib/store'
 import { cn, getArchetypeColor, getRankClass, winRate, ARCHETYPE_ICONS } from '@/lib/utils'
 import Link from 'next/link'
 import { useGameStore } from '@/lib/store'
-import { useWriteContract, useAccount } from 'wagmi'
+import { useWriteContract, useAccount, useReadContract } from 'wagmi'
 import { parseEther } from 'viem'
-import { BATTLE_ARENA_ABI, CONTRACT_ADDRESSES } from '@/lib/contracts'
+import { BATTLE_ARENA_ABI, CONTRACT_ADDRESSES, IERC20_ABI } from '@/lib/contracts'
+import { useTokenSwap, useTokenApproval, getFeeTier } from '@/lib/hooks/use-token-swap'
+import { getRecommendedToken } from '@/lib/uniswap-api'
 import { toast } from 'sonner'
 import { playSound } from '@/components/audio/SoundEffects'
 
 const RANK_FILTERS: (Rank | 'All')[] = ['All', 'Olympian', 'Titan', 'God', 'Hero', 'Demigod']
 const SORT_OPTIONS = ['ELO', 'Win Rate', 'Battles', 'Newest']
+
+const WETH_ADDRESS = '0x4200000000000000000000000000000000000006' // Sepolia WETH
+const USDC_ADDRESS = '0x036CbD53886a20b2A2DcB33B50fE4A8dA4d3EdF' // Sepolia USDC
+
+function TokenSwapSection() {
+  const [showSwap, setShowSwap] = useState(false)
+  const [swapAmount, setSwapAmount] = useState('0.1')
+  const { swapExactInput, hash, isWriting, isConfirming } = useTokenSwap()
+  const { approve, isWriting: isApproving } = useTokenApproval()
+  const { address } = useAccount()
+  
+  const { data: ethBalance } = useReadContract({
+    address: '0x0000000000000000000000000000000000000000' as `0x${string}`,
+    abi: IERC20_ABI,
+    functionName: 'balanceOf',
+    args: [address ?? '0x0000000000000000000000000000000000000000'],
+    query: { enabled: false }
+  })
+
+  const handleSwap = () => {
+    const amount = parseEther(swapAmount)
+    swapExactInput({
+      tokenIn: '0x0000000000000000000000000000000000000000' as `0x${string}`,
+      tokenOut: WETH_ADDRESS as `0x${string}`,
+      amountIn: amount,
+      amountOutMinimum: amount * 99n / 100n,
+      fee: getFeeTier(WETH_ADDRESS, USDC_ADDRESS),
+    })
+    toast.success('Swapping ETH for WETH...')
+    setShowSwap(false)
+  }
+
+  if (!showSwap) {
+    return (
+      <button
+        onClick={() => setShowSwap(true)}
+        className="w-full mb-4 text-xs font-josefin text-gold/60 hover:text-gold/80 underline"
+      >
+        Need tokens? Swap ETH → WETH for wagers
+      </button>
+    )
+  }
+
+  return (
+    <div className="mb-4 p-3 border border-gold/20 bg-gold/5">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs font-josefin text-parch/60">Swap ETH for WETH</span>
+        <button onClick={() => setShowSwap(false)} className="text-xs text-parch/30">✕</button>
+      </div>
+      <div className="flex gap-2">
+        <input
+          type="number"
+          value={swapAmount}
+          onChange={(e) => setSwapAmount(e.target.value)}
+          placeholder="0.1"
+          className="flex-1 bg-nox border border-stone/40 text-parch text-sm px-2 py-1"
+        />
+        <button
+          onClick={handleSwap}
+          disabled={isWriting || isConfirming}
+          className="px-3 py-1 bg-gold/20 text-gold text-xs font-cinzel uppercase disabled:opacity-50"
+        >
+          {isWriting ? 'Swapping...' : 'Swap'}
+        </button>
+      </div>
+      {hash && (
+        <div className="mt-2 text-[10px] font-josefin text-parch/40">
+          TX: {hash.slice(0, 10)}...
+        </div>
+      )}
+    </div>
+  )
+}
 
 function AgentCard({ agent, onSelect }: { agent: Agent; onSelect: (a: Agent) => void }) {
   const wr = winRate(agent.wins, agent.losses)
@@ -232,7 +307,7 @@ function AgentModal({ agent, onClose }: { agent: Agent; onClose: () => void }) {
               )}
             </div>
 
-            <div className="mb-6">
+            <div className="mb-4">
               <label className="section-label block mb-2">Wager Amount (ETH)</label>
               <input
                 type="number"
@@ -244,6 +319,8 @@ function AgentModal({ agent, onClose }: { agent: Agent; onClose: () => void }) {
                 className="w-full bg-nox border border-stone/40 text-parch font-josefin text-sm px-4 py-2 focus:outline-none focus:border-sand/40"
               />
             </div>
+
+            <TokenSwapSection />
 
             <div className="flex gap-3">
               <button onClick={() => setChallengeMode(false)} className="btn-ghost">Cancel</button>

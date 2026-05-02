@@ -4,6 +4,30 @@ import asyncio
 from typing import Any
 from config import settings
 
+try:
+    from eth_abi import encode as eth_encode
+    ETH_ABI_AVAILABLE = True
+except ImportError:
+    ETH_ABI_AVAILABLE = False
+
+
+def encode_abi(abi: list, method: str, args: list) -> str:
+    """Encode function call data from ABI."""
+    if not ETH_ABI_AVAILABLE:
+        raise RuntimeError("eth_abi package not installed. Run: pip install eth-abi")
+    
+    func = None
+    for item in abi:
+        if item.get("name") == method:
+            func = item
+            break
+    if not func:
+        raise ValueError(f"Method {method} not found in ABI")
+
+    types = [inp["type"] for inp in func.get("inputs", [])]
+    encoded = eth_encode(types, args)
+    return "0x" + encoded.hex()
+
 class KeeperHubClient:
     """
     KeeperHub MCP server integration.
@@ -35,8 +59,53 @@ class KeeperHubClient:
         Execute an on-chain transaction via KeeperHub MCP.
         Returns {txHash, status, gasUsed, blockNumber}.
         """
-        # FOR DEMO: Return mock TX hash instead of making real HTTP call
-        # to an endpoint that might not exist yet.
+        if not self.mcp_url or self.mcp_url == "https://api.keeperhub.io/mcp":
+            return await self._mock_transaction(contract_address, abi, method, args, gas_limit, value)
+
+        payload = {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "eth_sendTransaction",
+            "params": [{
+                "to": contract_address,
+                "data": encode_abi(abi, method, args),
+                "gas": hex(gas_limit),
+                "value": hex(value),
+            }]
+        }
+
+        for attempt in range(max_retries):
+            try:
+                async with httpx.AsyncClient(timeout=30.0) as c:
+                    resp = await c.post(
+                        self.mcp_url,
+                        headers=self.headers,
+                        json=payload
+                    )
+                    result = resp.json()
+                    if "result" in result:
+                        return {"txHash": result["result"], "status": "pending"}
+                    error_code = result.get("error", {}).get("code")
+                    if error_code == -32002:
+                        await asyncio.sleep(2 ** attempt)
+                        continue
+            except Exception as e:
+                if attempt == max_retries - 1:
+                    raise
+                await asyncio.sleep(2 ** attempt)
+
+        return {"txHash": "0x", "status": "failed"}
+
+    async def _mock_transaction(
+        self,
+        contract_address: str,
+        abi: list,
+        method: str,
+        args: list[Any],
+        gas_limit: int,
+        value: int,
+    ) -> dict:
+        """Fallback mock for demo/development."""
         await asyncio.sleep(1)
         import hashlib
         import time
@@ -44,9 +113,31 @@ class KeeperHubClient:
         return {"txHash": mock_hash, "status": "pending"}
 
     async def get_transaction_status(self, tx_hash: str) -> dict:
-        """Poll transaction receipt."""
-        await asyncio.sleep(0.5)
-        return {"confirmed": True, "status": "success"}
+        """Poll transaction receipt from KeeperHub."""
+        if not self.mcp_url or self.mcp_url == "https://api.keeperhub.io/mcp":
+            await asyncio.sleep(0.5)
+            return {"confirmed": True, "status": "success"}
+
+        payload = {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "eth_getTransactionReceipt",
+            "params": [tx_hash]
+        }
+
+        async with httpx.AsyncClient(timeout=10.0) as c:
+            resp = await c.post(self.mcp_url, headers=self.headers, json=payload)
+            result = resp.json().get("result", {})
+
+            if not result:
+                return {"confirmed": False, "status": "pending"}
+
+            return {
+                "confirmed": result.get("status") == "0x1",
+                "status": "success" if result.get("status") == "0x1" else "failed",
+                "gasUsed": int(result.get("gasUsed", "0x0"), 16),
+                "blockNumber": int(result.get("blockNumber", "0x0"), 16)
+            }
 
     async def wait_for_confirmation(
         self,

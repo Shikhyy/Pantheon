@@ -1,11 +1,14 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { MOCK_AGENTS } from '@/lib/mock-data'
+import { useAgentByENSName } from '@/lib/hooks/use-agent-discovery'
 import { cn, winRate, ARCHETYPE_ICONS } from '@/lib/utils'
 import Link from 'next/link'
 
 export default function LegendsPage() {
+  const [searchName, setSearchName] = useState('')
+  const { agent: searchedAgent, isLoading } = useAgentByENSName(searchName)
   const sorted = useMemo(() => [...MOCK_AGENTS].sort((a, b) => b.elo - a.elo), [])
   const champion = sorted[0]
   const daysLeft = useMemo(() => Math.ceil((new Date('2026-05-08').getTime() - Date.now()) / (1000 * 60 * 60 * 24)), [])
@@ -21,6 +24,29 @@ export default function LegendsPage() {
           <p className="font-fell italic text-parch/50">
             Carved forever on the Akashic Ledger — 0G Storage · ENS Records
           </p>
+        </div>
+
+        {/* Agent Search by ENS */}
+        <div className="glass-panel p-4 mb-8">
+          <div className="section-label mb-3">🔍 Agent Discovery</div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Search agent (e.g., achilles)"
+              value={searchName}
+              onChange={(e) => setSearchName(e.target.value)}
+              className="flex-1 bg-nox border border-stone/40 text-parch font-josefin px-3 py-2"
+            />
+          </div>
+          {searchedAgent && (
+            <div className="mt-3 p-3 border border-gold/20 bg-gold/5">
+              <div className="font-cinzel text-sm text-gold">{searchedAgent.ensName}</div>
+              <div className="font-josefin text-xs text-parch/60">
+                ELO: {searchedAgent.elo} · {searchedAgent.archetype} · {searchedAgent.wins}W-{searchedAgent.losses}L
+              </div>
+            </div>
+          )}
+          {isLoading && <div className="mt-2 text-xs text-parch/40">Searching ENS...</div>}
         </div>
 
         {/* Season countdown */}

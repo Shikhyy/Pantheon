@@ -28,11 +28,18 @@ class ZeroGStorageSkill:
         "KV for mutable state, Log for append-only eternal records."
     )
 
-    def __init__(self, base_url: str, api_key: str):
-        self.base_url = base_url
-        self.headers  = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type":  "application/json",
+    def __init__(self, base_url: str = None, api_key: str = None):
+        try:
+            from agent.config import settings
+            self.base_url = base_url or settings.OG_STORAGE_URL or "https://storage-testnet.0g.ai"
+            self.api_key = api_key or ""
+        except ImportError:
+            self.base_url = base_url or "https://storage-testnet.0g.ai"
+            self.api_key = api_key or ""
+        
+        self.headers = {
+            "Authorization": f"Bearer {self.api_key}" if self.api_key else "",
+            "Content-Type": "application/json",
         }
 
     def register(self, agent) -> None:

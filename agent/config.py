@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     KEEPERHUB_MCP_URL: str = "https://api.keeperhub.io/mcp"
     KEEPERHUB_API_KEY: str = ""
 
+    # Gensyn
+    GENSYN_URL: str = "https://api.gensyn.io/v1"
+    GENSYN_API_KEY: str = ""
+
     # Contracts
     PANTHEON_AGENT_ADDRESS: str = "0x0000000000000000000000000000000000000000"
     BATTLE_ARENA_ADDRESS: str = "0x0000000000000000000000000000000000000000"

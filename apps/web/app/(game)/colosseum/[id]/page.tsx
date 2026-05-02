@@ -208,7 +208,15 @@ export default function ColosseumPage({ params }: Props) {
   const [battle] = useState(MOCK_BATTLE)
   const [round, setRound] = useState(3)
   const [showWagerModal, setShowWagerModal] = useState(false)
+  const [verificationStatus, setVerificationStatus] = useState<'pending' | 'verified' | 'none'>('none')
   const parallaxRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (round >= 5) {
+      setVerificationStatus('pending')
+      setTimeout(() => setVerificationStatus('verified'), 2000)
+    }
+  }, [round])
 
   // Parallax effect on mouse move
   useEffect(() => {
@@ -341,11 +349,32 @@ export default function ColosseumPage({ params }: Props) {
           <span className="font-cinzel text-[8px] tracking-widest text-parch/40 uppercase">
             Battle Active · KeeperHub monitoring · 0G Storage log streaming
           </span>
-          <div className="ml-auto">
-            <span className="font-cinzel text-[8px] text-parch/25">
-              SSE: Connected
-            </span>
-          </div>
+          
+          {verificationStatus === 'verified' && (
+            <div className="flex items-center gap-2 ml-auto">
+              <span className="w-2 h-2 rounded-full bg-gold animate-pulse" />
+              <span className="font-cinzel text-[8px] text-gold tracking-widest">
+                ✓ Gensyn Verified
+              </span>
+            </div>
+          )}
+          
+          {verificationStatus === 'pending' && (
+            <div className="flex items-center gap-2 ml-auto">
+              <span className="w-2 h-2 rounded-full bg-sand animate-pulse" />
+              <span className="font-cinzel text-[8px] text-sand/60 tracking-widest">
+                Verifying...
+              </span>
+            </div>
+          )}
+          
+          {verificationStatus === 'none' && (
+            <div className="ml-auto">
+              <span className="font-cinzel text-[8px] text-parch/25">
+                SSE: Connected
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Wager Modal */}

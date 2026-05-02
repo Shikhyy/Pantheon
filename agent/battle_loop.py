@@ -7,6 +7,12 @@ from axl_client import AXLClient
 from crypto import decrypt_directive
 from config import settings
 
+try:
+    from gensyn_client import GensynClient
+    GENSYN_AVAILABLE = True
+except ImportError:
+    GENSYN_AVAILABLE = False
+
 class AgentBattleLoop:
     def __init__(
         self,
@@ -97,6 +103,15 @@ class AgentBattleLoop:
             )
         except Exception as e:
             print(f"Failed to save log to 0G: {e}")
+
+        # 7. Verify battle result with Gensyn (if available)
+        if GENSYN_AVAILABLE:
+            try:
+                gensyn = GensynClient()
+                verification = await gensyn.wait_for_proof(f"battle_{self.battle_id}")
+                print(f"Battle {self.battle_id} verified: {verification.get('verified', False)}")
+            except Exception as e:
+                print(f"Gensyn verification skipped: {e}")
 
     async def _generate_move(
         self,
