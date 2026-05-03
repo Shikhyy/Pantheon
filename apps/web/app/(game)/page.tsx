@@ -1,18 +1,19 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useGSAP } from '@gsap/react'
 import { useAllAgents } from '@/lib/hooks/use-all-agents'
+import { useOdysseyStore } from '@/lib/odyssey-store'
 import { Hammer, Swords, Dna, Star } from 'lucide-react'
 import { ARCHETYPE_ICONS } from '@/lib/utils'
 
 gsap.registerPlugin(ScrollTrigger)
 gsap.registerPlugin(useGSAP)
 
-const MARQUEE_TEXT = 'Forge your god · Enter the arena · Breed legends · Wager on fate · Claim apotheosis · Built on 0G · ENS · AXL · Uniswap · KeeperHub · '
+const MARQUEE_TEXT = 'Forge your god · Enter the arena · Breed legends · Wager on fate · Claim apotheosis · Built on 0G · ENS · Uniswap · KeeperHub · '
 
 const STORY_PANELS = [
   {
@@ -52,16 +53,19 @@ const THE_WAYS = [
   { roman: 'IV', title: 'Ascend', description: 'Rise through the ranks. Demigod to Olympian. Claim apotheosis forever on-chain.', href: '/legends', Icon: Star },
 ]
 
-const STATS = [
-  { label: 'Agents Forged', value: '847', prefix: '', suffix: '+' },
-  { label: 'Battles Fought', value: '2,341', prefix: '', suffix: '' },
-  { label: 'ETH Wagered', value: '128', prefix: '', suffix: ' ETH' },
-  { label: 'Sponsor Prizes', value: '$39,500', prefix: '', suffix: '' },
-]
-
 export default function LandingPage() {
   const containerRef = useRef<HTMLDivElement>(null)
   const { agents } = useAllAgents()
+  const { setParallaxOffset } = useOdysseyStore()
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 2
+      setParallaxOffset(x)
+    }
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [setParallaxOffset])
 
   useGSAP(() => {
     // Hero section - animate immediately
@@ -69,6 +73,19 @@ export default function LandingPage() {
       { opacity: 0, y: 40 },
       { opacity: 1, y: 0, duration: 1.2, ease: 'power3.out' }
     )
+
+    // Fade out CTAs and scroll indicator on scroll
+    gsap.to('.hero-cta', {
+      opacity: 0,
+      y: -20,
+      ease: 'power1.inOut',
+      scrollTrigger: {
+        trigger: '.hero-content',
+        start: 'top top',
+        end: 'bottom center',
+        scrub: true,
+      },
+    })
 
     // Stagger reveal sections on scroll
     const sections = document.querySelectorAll('.reveal-section')
@@ -88,48 +105,6 @@ export default function LandingPage() {
           },
         }
       )
-    })
-
-    // Counter animations with visibility check
-    const counters = document.querySelectorAll('.stat-counter')
-    counters.forEach((el) => {
-      const element = el as HTMLElement
-      const target = Number(element.dataset.target ?? '0')
-      const prefix = element.dataset.prefix ?? ''
-      const suffix = element.dataset.suffix ?? ''
-      const formatter = new Intl.NumberFormat('en-US')
-      const counter = { value: 0 }
-
-      const updateCounter = () => {
-        element.textContent = `${prefix}${formatter.format(Math.floor(counter.value))}${suffix}`
-      }
-
-      // Check if already visible
-      const rect = element.getBoundingClientRect()
-      const isVisible = rect.top < window.innerHeight
-
-      if (isVisible) {
-        gsap.to(counter, {
-          value: target,
-          duration: 2,
-          ease: 'power1.out',
-          onUpdate: updateCounter,
-        })
-      } else {
-        ScrollTrigger.create({
-          trigger: el,
-          start: 'top 90%',
-          once: true,
-          onEnter: () => {
-            gsap.to(counter, {
-              value: target,
-              duration: 2,
-              ease: 'power1.out',
-              onUpdate: updateCounter,
-            })
-          },
-        })
-      }
     })
 
     // Safety check - make everything visible after 2s
@@ -152,52 +127,33 @@ export default function LandingPage() {
     <div ref={containerRef} className="relative">
 
       {/* ── SECTION I: HERO ── */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-20 hero-content">
+      <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 hero-content pb-20">
         <div className="max-w-4xl mx-auto">
 
-          {/* Pre-title label */}
-          <div className="section-label mb-6 reveal-section">
-            ETHGlobal OpenAgents 2026
-          </div>
-
           {/* Main headline */}
-          <h1 className="font-cinzel-dec text-5xl md:text-7xl lg:text-8xl text-parch leading-tight mb-4 reveal-section">
+          <h1 className="font-cinzel-dec text-5xl md:text-8xl text-parch tracking-[0.2em] mb-4 reveal-section">
             PANTHEON
           </h1>
-          <h2 className="font-fell italic text-xl md:text-2xl text-sand/70 mb-8 reveal-section">
+          <h2 className="font-fell italic text-xl md:text-2xl text-sand/60 mb-6 reveal-section">
             Where Mortal Code Becomes Immortal Legend
           </h2>
-
-          {/* Stats row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12 reveal-section">
-            {STATS.map(({ label, value, prefix = '', suffix = '' }) => (
-              <div key={label} className="stone-card p-4">
-                <div
-                  className="stat-counter font-cinzel text-xl text-gold mb-1"
-                  data-target={value}
-                  data-prefix={prefix}
-                  data-suffix={suffix}
-                >
-                  {prefix}0{suffix}
-                </div>
-                <div className="section-label text-[7px]">{label}</div>
-              </div>
-            ))}
-          </div>
+          <p className="font-josefin text-sm md:text-base text-parch/40 max-w-2xl mx-auto mb-16 reveal-section leading-relaxed">
+            Command autonomous AI agents in the ultimate on-chain battle arena. Train, battle, and ascend to the immortal ledger.
+          </p>
 
           {/* CTA buttons */}
-          <div className="flex items-center justify-center gap-4 reveal-section">
-<Link href="/forge" id="summon-cta" className="btn-gold text-[9px] px-8 py-4 flex items-center gap-2">
-  <Hammer size={14} />
-  <span>Summon Your God</span>
-</Link>
-            <Link href="/agora" id="agora-cta" className="btn-ghost text-[9px] px-8 py-4">
+          <div className="flex items-center justify-center gap-8 reveal-section hero-cta">
+            <Link href="/forge" id="summon-cta" className="btn-gold text-[10px] px-10 py-5 flex items-center gap-3 tracking-[0.2em] uppercase">
+              <Hammer size={16} />
+              <span>Summon Your God</span>
+            </Link>
+            <Link href="/agora" id="agora-cta" className="font-cinzel text-[10px] tracking-[0.3em] uppercase text-parch/40 hover:text-gold transition-colors">
               Enter the Agora →
             </Link>
           </div>
 
           {/* Scroll indicator */}
-          <div className="mt-16 flex flex-col items-center gap-2 text-parch/20 animate-drift reveal-section">
+          <div className="mt-16 flex flex-col items-center gap-2 text-parch/20 animate-drift reveal-section hero-cta">
             <span className="section-label text-[7px]">Scroll to descend</span>
             <svg width="12" height="20" viewBox="0 0 12 20" fill="none">
               <path d="M6 0v16M1 11l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -207,7 +163,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── MARQUEE TICKER ── */}
-      <div className="relative overflow-hidden border-y border-stone/20 py-3 bg-nox/80 backdrop-blur-sm">
+      <div className="relative overflow-hidden border-y border-stone/20 py-3 bg-nox/40 backdrop-blur-sm">
         <div className="flex animate-marquee whitespace-nowrap">
           {[MARQUEE_TEXT, MARQUEE_TEXT].map((text, i) => (
             <span key={i} className="font-cinzel text-[8px] tracking-[.2em] uppercase text-sand/30 mx-0">
@@ -221,8 +177,7 @@ export default function LandingPage() {
       {STORY_PANELS.map(({ roman, title, subtitle, body, accent }, i) => (
         <section
           key={roman}
-          className="relative min-h-screen flex items-center reveal-section"
-          style={{ background: `linear-gradient(${i % 2 === 0 ? '135deg' : '225deg'}, rgba(14,10,26,0.95), rgba(7,5,15,0.98))` }}
+          className="relative min-h-screen flex items-center reveal-section bg-transparent"
         >
           <div className="max-w-5xl mx-auto px-8 md:px-16 grid md:grid-cols-2 gap-16 items-center">
             {/* Roman numeral */}
@@ -345,7 +300,6 @@ export default function LandingPage() {
             {[
               { name: '0G', desc: 'Compute · Storage · Chain' },
               { name: 'ENS', desc: 'Agent Identity' },
-              { name: 'Gensyn AXL', desc: 'P2P Mesh' },
               { name: 'Uniswap v4', desc: 'Wager Pools' },
               { name: 'KeeperHub', desc: 'TX Execution' },
             ].map(({ name, desc }) => (
@@ -361,7 +315,7 @@ export default function LandingPage() {
       {/* ── FOOTER ── */}
       <footer className="border-t border-stone/20 py-8 px-6 text-center">
         <p className="font-cinzel text-[8px] tracking-[.2em] uppercase text-parch/20">
-          Pantheon · ETHGlobal OpenAgents 2026 · Where Mortal Code Becomes Immortal Legend
+          Pantheon · Where Mortal Code Becomes Immortal Legend
         </p>
       </footer>
 

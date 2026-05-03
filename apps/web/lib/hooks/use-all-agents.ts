@@ -14,6 +14,7 @@ export interface LiveAgent {
   storageHash: string
   directiveHash: string
   owner: string
+  ensName?: string
 }
 
 const ARCHETYPES = ['Unknown', 'Strategist', 'Berserker', 'Oracle', 'Diplomat']
@@ -61,7 +62,7 @@ export function useAllAgents() {
         const agentData = agentDataResult.result as any
         agents.push({
           id: (i + 1).toString(),
-          name: nameResult.result as string,
+          name: nameResult.result as unknown as string,
           archetype: ARCHETYPES[Number(agentData.archetype)] || 'Unknown',
           elo: Number(agentData.elo),
           rank: Number(agentData.rank),

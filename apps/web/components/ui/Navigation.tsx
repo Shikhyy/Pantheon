@@ -14,6 +14,7 @@ const NAV_LINKS = [
   { href: '/colosseum', label: 'Colosseum', romanNumeral: 'IV'  },
   { href: '/legends',   label: 'Legends',   romanNumeral: 'V'   },
   { href: '/dashboard', label: 'My Pantheon', romanNumeral: 'VI' },
+  { href: '/about',     label: 'About',     romanNumeral: 'VII' },
 ]
 
 export function Navigation() {
@@ -37,7 +38,7 @@ export function Navigation() {
         </Link>
 
         {/* Desktop nav links */}
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden md:flex items-center gap-4 lg:gap-6">
           {NAV_LINKS.map(({ href, label, romanNumeral }) => {
             const isActive = pathname === href || (href !== '/' && pathname.startsWith(href))
             return (
@@ -45,7 +46,7 @@ export function Navigation() {
                 key={href}
                 href={href}
                 className={cn(
-                  'font-cinzel text-[9px] tracking-[.2em] uppercase transition-colors duration-300 relative',
+                  'font-cinzel text-[8px] lg:text-[9px] tracking-[.15em] lg:tracking-[.2em] uppercase transition-colors duration-300 relative whitespace-nowrap',
                   isActive
                     ? 'text-sand'
                     : 'text-parch/40 hover:text-parch/80'

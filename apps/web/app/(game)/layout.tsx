@@ -1,11 +1,10 @@
 'use client'
 
 import { Navigation } from '@/components/ui/Navigation'
-import AxlStatus from '@/components/AxlStatus'
 
 export default function GameLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative min-h-screen bg-nox overflow-x-hidden">
+    <div className="relative min-h-screen bg-transparent overflow-x-hidden">
       {/* Navigation */}
       <Navigation />
 
@@ -13,7 +12,6 @@ export default function GameLayout({ children }: { children: React.ReactNode }) 
       <main className="relative">
         {children}
       </main>
-      <AxlStatus />
     </div>
   )
 }

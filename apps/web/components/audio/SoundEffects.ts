@@ -11,6 +11,7 @@ export const SOUNDS = {
     volume: 0.3,
     preload: true,
     html5: true, // For large audio files
+    onloaderror: () => console.warn('Sound asset missing: temple_drone.mp3'),
   }),
 
   // Heavy stone UI click
@@ -18,6 +19,7 @@ export const SOUNDS = {
     src: ['/sounds/stone_click.mp3'],
     volume: 0.5,
     preload: true,
+    onloaderror: () => console.warn('Sound asset missing: stone_click.mp3'),
   }),
 
   // Anvil strike for forging
@@ -25,6 +27,7 @@ export const SOUNDS = {
     src: ['/sounds/anvil_strike.mp3'],
     volume: 0.6,
     preload: true,
+    onloaderror: () => console.warn('Sound asset missing: anvil_strike.mp3'),
   }),
 
   // Battle combat swoosh
@@ -32,6 +35,7 @@ export const SOUNDS = {
     src: ['/sounds/sword_clash.mp3'],
     volume: 0.4,
     preload: true,
+    onloaderror: () => console.warn('Sound asset missing: sword_clash.mp3'),
   }),
 
   // Heavenly choir for rank up / apotheosis
@@ -39,6 +43,7 @@ export const SOUNDS = {
     src: ['/sounds/apotheosis.mp3'],
     volume: 0.6,
     preload: true,
+    onloaderror: () => console.warn('Sound asset missing: apotheosis.mp3'),
   })
 }
 

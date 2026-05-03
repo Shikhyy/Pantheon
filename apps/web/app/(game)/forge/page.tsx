@@ -136,17 +136,42 @@ export default function ForgePage() {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen flex items-center justify-center pt-20">
-<div className="text-center">
-  <div className="mb-6 text-gold">
-    <Hammer size={36} />
-  </div>
-  <h2 className="font-cinzel text-xl text-parch mb-3">Connect to Enter the Forge</h2>
-  <p className="font-josefin text-parch/40 text-sm mb-8">
-    Your wallet is your hammer. Your directive is your fire.
-  </p>
-  <ConnectButton />
-</div>
+      <div className="min-h-screen flex items-center justify-center pt-24 px-6">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="glass-panel p-12 max-w-lg w-full text-center relative overflow-hidden"
+        >
+          {/* Animated Background Glow */}
+          <div className="absolute inset-0 bg-gradient-to-b from-gold/5 to-transparent pointer-events-none" />
+          
+          <div className="relative z-10">
+            <div className="mb-8 flex justify-center">
+              <div className="w-16 h-16 border border-gold/30 rounded-full flex items-center justify-center text-gold animate-pulse">
+                <Hammer size={32} />
+              </div>
+            </div>
+            
+            <div className="section-label mb-2">Sacred Access Required</div>
+            <h2 className="font-cinzel text-3xl text-parch mb-4 tracking-tight">
+              Enter the Divine Forge
+            </h2>
+            <p className="font-fell italic text-parch/50 text-lg mb-10 leading-relaxed">
+              "Your wallet is your hammer. <br />
+              Your directive is your fire."
+            </p>
+            
+            <div className="flex justify-center scale-110">
+              <ConnectButton />
+            </div>
+            
+            <div className="mt-12 pt-8 border-t border-stone/10">
+              <p className="font-cinzel text-[8px] tracking-[0.2em] text-parch/20 uppercase">
+                Supported Networks: 0G Testnet • Sepolia
+              </p>
+            </div>
+          </div>
+        </motion.div>
       </div>
     )
   }

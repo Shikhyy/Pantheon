@@ -41,7 +41,7 @@
   * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
 
   html {
-    background: #07050F;
+    background: transparent;
     color: #F2E0D5;
     scroll-behavior: smooth;
   }
@@ -74,8 +74,8 @@
 
   /* ── Cards ── */
   .stone-card {
-    @apply bg-deep border border-stone/20 relative overflow-hidden transition-all duration-500 ease-out;
-    background: linear-gradient(135deg, rgba(14,8,24,0.95) 0%, rgba(20,14,36,0.9) 100%);
+    @apply border border-stone/20 relative overflow-hidden transition-all duration-500 ease-out;
+    background: linear-gradient(135deg, rgba(14,8,24,0.3) 0%, rgba(20,14,36,0.2) 100%);
   }
   .stone-card::before {
     content: '';
@@ -97,7 +97,7 @@
   /* Marble variant (lighter) */
   .marble-card {
     @apply relative overflow-hidden border border-stone/15;
-    background: linear-gradient(135deg, rgba(24,18,40,0.9) 0%, rgba(30,22,50,0.85) 100%);
+    background: linear-gradient(135deg, rgba(24,18,40,0.5) 0%, rgba(30,22,50,0.4) 100%);
   }
   .marble-card::after {
     content: '';
@@ -230,7 +230,7 @@
 
   /* ── Glass panel ── */
   .glass-panel {
-    @apply bg-deep/60 backdrop-blur-sm border border-stone/20;
+    @apply bg-deep/20 backdrop-blur-sm border border-stone/15;
   }
 
   /* ── Avatar card frame (Greek corners) ── */

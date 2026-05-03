@@ -1,10 +1,11 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { ReactNode } from 'react'
+import { ReactNode, Suspense } from 'react'
 import { Providers } from '@/components/Providers'
 import { Toaster } from 'sonner'
 import { AnimatePresence, motion } from 'framer-motion'
+import OdysseyScene from '@/components/r3f/OdysseyScene'
 import './globals.css'
 
 export default function ClientLayout({ children }: { children: ReactNode }) {
@@ -25,6 +26,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
             {children}
           </motion.main>
         </AnimatePresence>
+        <OdysseyScene currentRoute={pathname} />
         <Toaster theme="dark" toastOptions={{ className: 'font-cinzel text-xs tracking-widest uppercase bg-nox border-stone/20 text-parch' }} />
       </Providers>
     </>

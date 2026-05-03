@@ -97,8 +97,8 @@ function TokenSwapSection() {
 
 function AgentCard({ agent, onSelect }: { agent: LiveAgent; onSelect: (a: LiveAgent) => void }) {
   const wr = winRate(agent.wins, agent.losses)
-  const archetypeClass = getArchetypeColor(agent.archetype)
-  const rankClass = getRankClass(agent.rank)
+  const archetypeClass = getArchetypeColor(agent.archetype as any)
+  const rankClass = getRankClass(agent.rank as any)
 
   return (
     <motion.button
@@ -228,7 +228,7 @@ function AgentModal({ agent, onClose }: { agent: LiveAgent; onClose: () => void 
           <div>
             <div className="font-cinzel text-xl text-sand">{agent.name}</div>
             <div className="section-label text-[7px] text-parch/30">{`${agent.name.toLowerCase()}.agent.eth`}</div>
-            <div className={cn('font-cinzel text-[8px] tracking-widest uppercase mt-1', getArchetypeColor(agent.archetype))}>
+            <div className={cn('font-cinzel text-[8px] tracking-widest uppercase mt-1', getArchetypeColor(agent.archetype as any))}>
               {agent.archetype}
             </div>
           </div>
@@ -256,7 +256,7 @@ function AgentModal({ agent, onClose }: { agent: LiveAgent; onClose: () => void 
 
         {/* Rank */}
         <div className="flex items-center gap-2 mb-6 flex-wrap">
-          <span className={cn('rank-pill', getRankClass(agent.rank))}>{agent.rank}</span>
+          <span className={cn('rank-pill', getRankClass(agent.rank as any))}>{agent.rank}</span>
         </div>
 
         {/* CTA or Challenge Mode */}
@@ -441,7 +441,7 @@ export default function AgoraPage() {
   const { agents: displayAgents, isLoading } = useAllAgents()
 
   const filtered = displayAgents
-    .filter(a => rankFilter === 'All' || a.rank === rankFilter)
+    .filter(a => rankFilter === 'All' || (a.rank as any) === rankFilter)
     .sort((a, b) => {
       if (sortBy === 'ELO') return b.elo - a.elo
       if (sortBy === 'Win Rate') return winRate(b.wins, b.losses) - winRate(a.wins, a.losses)

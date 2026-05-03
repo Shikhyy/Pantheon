@@ -36,10 +36,10 @@ const isProd = process.env.NODE_ENV === 'production'
 export const wagmiConfig = getDefaultConfig({
   appName: 'Pantheon',
   projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ?? 'pantheon-demo',
-  chains: isProd ? [ogTestnet, localAnvil, mainnet, sepolia] : [localAnvil, ogTestnet, mainnet, sepolia],
+  chains: [ogTestnet, localAnvil, mainnet, sepolia],
   transports: {
-    [localAnvil.id]: http('http://127.0.0.1:8545'),
     [ogTestnet.id]: http(process.env.NEXT_PUBLIC_RPC_URL ?? 'https://evmrpc-testnet.0g.ai'),
+    [localAnvil.id]: http('http://127.0.0.1:8545'),
     [mainnet.id]: http(),
     [sepolia.id]: http(),
   },
