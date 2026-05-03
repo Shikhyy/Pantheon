@@ -79,21 +79,21 @@ export function Navigation() {
                   {!connected ? (
                     <button
                       onClick={openConnectModal}
-                      className="font-cinzel text-[8px] tracking-[.18em] uppercase border border-sand text-sand bg-transparent px-6 py-3 relative overflow-hidden hover:border-gold-b hover:text-gold-b transition-all duration-300"
+                      className="font-cinzel text-[10px] tracking-[.2em] uppercase border border-gold/40 text-gold bg-gold/[0.05] px-6 py-3 relative overflow-hidden hover:bg-gold/10 hover:border-gold transition-all duration-300 shadow-[0_0_15px_rgba(212,175,55,0.1)] hover:shadow-[0_0_20px_rgba(212,175,55,0.2)]"
                     >
                       <span>Connect Wallet</span>
                     </button>
                   ) : (
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-4">
                       <button
                         onClick={openChainModal}
-                        className="font-cinzel text-[8px] tracking-[.12em] uppercase text-sand/50 hover:text-sand transition-colors"
+                        className="font-cinzel text-[10px] tracking-[.15em] uppercase text-sand/50 hover:text-sand transition-colors"
                       >
                         {chain?.name}
                       </button>
                       <button
                         onClick={openAccountModal}
-                        className="font-cinzel text-[8px] tracking-[.12em] uppercase border border-stone/40 text-parch/60 px-4 py-2 hover:border-sand/40 hover:text-parch transition-all duration-300"
+                        className="font-cinzel text-[10px] tracking-[.15em] uppercase border border-gold/30 text-parch/80 px-5 py-2.5 bg-gold/[0.03] hover:border-gold/60 hover:text-parch transition-all duration-300 shadow-[inset_0_0_10px_rgba(212,175,55,0.05)] hover:shadow-[inset_0_0_15px_rgba(212,175,55,0.1)]"
                       >
                         {account.displayName}
                       </button>

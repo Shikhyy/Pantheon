@@ -105,7 +105,7 @@ function WagerPoolBar({ wageredA, wageredB, onOpenWager }: { wageredA: bigint; w
   )
 }
 
-function WagerModal({ battle, onClose }: { battle: typeof MOCK_BATTLE; onClose: () => void }) {
+function WagerModal({ id, battle, onClose }: { id: string; battle: typeof MOCK_BATTLE; onClose: () => void }) {
   const { isConnected } = useAccount()
   const [amount, setAmount] = useState('0.01')
   const [side, setSide] = useState<'A' | 'B' | null>(null)
@@ -127,8 +127,10 @@ function WagerModal({ battle, onClose }: { battle: typeof MOCK_BATTLE; onClose: 
     }
     playSound('stoneClick')
     
-    // In actual implementation, battleId should be bytes32. Mocking here.
-    const mockBattleId = pad(stringToHex('mock-battle-id'), { size: 32 })
+    // Use the actual battle ID from the URL if it's a valid hex, otherwise fallback to mock for demo
+    const battleIdToUse = id.startsWith('0x') && id.length === 66 
+      ? id as `0x${string}` 
+      : pad(stringToHex(id), { size: 32 })
     
     try {
       await writeWager({
@@ -136,7 +138,7 @@ function WagerModal({ battle, onClose }: { battle: typeof MOCK_BATTLE; onClose: 
         abi: AGORA_POOL_ABI,
         functionName: 'placeWager',
         args: [
-          mockBattleId,
+          battleIdToUse,
           parseEther(amount),
           side === 'A'
         ]
@@ -356,7 +358,7 @@ export default function ColosseumPage({ params }: Props) {
         </div>
 
         {/* Wager Modal */}
-        {showWagerModal && <WagerModal battle={battle} onClose={() => setShowWagerModal(false)} />}
+        {showWagerModal && <WagerModal id={id} battle={battle} onClose={() => setShowWagerModal(false)} />}
       </div>
     </div>
   )

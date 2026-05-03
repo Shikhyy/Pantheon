@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MOCK_AGENTS } from '@/lib/mock-data' // Will be deleted, keeping only for type reference temporarily
 import type { Agent, Archetype, Rank } from '@/lib/store'
 import { useAllAgents, LiveAgent } from '@/lib/hooks/use-all-agents'
 import { cn, getArchetypeColor, getRankClass, winRate, ARCHETYPE_ICONS } from '@/lib/utils'
