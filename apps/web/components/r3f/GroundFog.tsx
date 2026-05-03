@@ -15,6 +15,7 @@ const fogVertexShader = /* glsl */`
 
 const fogFragmentShader = /* glsl */`
   uniform float uTime;
+  uniform vec3 uColor;
   varying vec2 vUv;
 
   float hash(vec2 p) {
@@ -39,35 +40,45 @@ const fogFragmentShader = /* glsl */`
   }
 
   void main() {
-    vec2 uv = vUv + vec2(uTime * 0.02, uTime * 0.01);
-    float fog = fbm(uv * 3.0) * 0.8;
-    float edge = smoothstep(0.0, 0.3, vUv.x) * smoothstep(1.0, 0.7, vUv.x)
-               * smoothstep(0.0, 0.3, vUv.y) * smoothstep(1.0, 0.5, vUv.y);
+    vec2 uv = vUv + vec2(uTime * 0.015, uTime * 0.008);
+    float fog = fbm(uv * 4.0);
+    float edge = smoothstep(0.0, 0.4, vUv.x) * smoothstep(1.0, 0.6, vUv.x)
+               * smoothstep(0.0, 0.4, vUv.y) * smoothstep(1.0, 0.6, vUv.y);
 
-    vec3 fogColor = vec3(0.1, 0.07, 0.15);
-    gl_FragColor = vec4(fogColor, fog * edge * 0.5);
+    gl_FragColor = vec4(uColor, fog * edge * 0.3);
   }
 `
 
-export function GroundFog() {
+interface GroundFogProps {
+  color?: string
+}
+
+export function GroundFog({ color = "#1A1020" }: GroundFogProps) {
   const matRef = useRef<ShaderMaterial>(null)
+  const threeColor = useMemo(() => new THREE.Color(color), [color])
 
   const mat = useMemo(() => new ShaderMaterial({
     vertexShader:   fogVertexShader,
     fragmentShader: fogFragmentShader,
-    uniforms: { uTime: { value: 0 } },
+    uniforms: { 
+      uTime: { value: 0 },
+      uColor: { value: threeColor }
+    },
     transparent: true,
     depthWrite: false,
-  }), [])
+    blending: THREE.AdditiveBlending,
+  }), [threeColor])
 
   useFrame(({ clock }) => {
     if (matRef.current) matRef.current.uniforms.uTime.value = clock.elapsedTime
   })
 
   return (
-    <mesh position={[0, -2.5, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-      <planeGeometry args={[40, 20, 1, 1]} />
+    <mesh position={[0, 0.1, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <planeGeometry args={[50, 30]} />
       <primitive object={mat} ref={matRef} />
     </mesh>
   )
 }
+
+import * as THREE from 'three'

@@ -6,7 +6,7 @@ import { MeshStandardMaterial } from 'three'
 
 export function ParthenaSilhouette() {
   const marbleMat = useMemo(() => new MeshStandardMaterial({
-    color: '#1A1020',
+    color: '#3A2B40',
     roughness: 0.4,
     metalness: 0.1,
   }), [])

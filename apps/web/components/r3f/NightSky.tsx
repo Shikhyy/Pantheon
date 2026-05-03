@@ -14,7 +14,11 @@ const starVertexShader = /* glsl */`
   void main() {
     vAlpha = 0.3 + 0.7 * abs(sin(uTime * 0.8 + aOffset * 6.28));
     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-    gl_PointSize = aSize * (300.0 / -mvPosition.z);
+    
+    // Calculate point size based on depth, but clamp it to prevent giant spheres
+    float calculatedSize = aSize * (300.0 / max(-mvPosition.z, 0.1));
+    gl_PointSize = clamp(calculatedSize, 0.0, 15.0);
+    
     gl_Position = projectionMatrix * mvPosition;
   }
 `
@@ -39,11 +43,12 @@ export function NightSky({ starCount = 2000 }: { starCount?: number }) {
     const sizes     = new Float32Array(starCount)
 
     for (let i = 0; i < starCount; i++) {
-      positions[i * 3]     = (Math.random() - 0.5) * 200
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 100 + 20
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 200 - 30
+      positions[i * 3]     = (Math.random() - 0.5) * 400
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 200 + 40
+      // Spawn stars strictly in the deep background (z from -50 to -450)
+      positions[i * 3 + 2] = -Math.random() * 400 - 50
       offsets[i] = Math.random() * Math.PI * 2
-      sizes[i]   = Math.random() * 2.5 + 0.5
+      sizes[i]   = Math.random() * 0.8 + 0.1
     }
 
     const geo = new BufferGeometry()

@@ -32,6 +32,13 @@ export function AvatarCard({ archetype, rank, elo, health = 100, size = 'md' }: 
       <div className="avatar-corner avatar-corner-bl" />
       <div className="avatar-corner avatar-corner-br" />
 
+      <div className="absolute inset-0 flex items-center justify-center bg- Nox/40">
+        <div className="text-4xl text-gold/20">
+          {/* WebGL Context Reserved for Apotheosis Engine */}
+          🏛️
+        </div>
+      </div>
+      {/* 
       <Canvas
         camera={{ position: [0, 0.2, 2.2], fov: 40 }}
         shadows
@@ -54,6 +61,7 @@ export function AvatarCard({ archetype, rank, elo, health = 100, size = 'md' }: 
           />
         </Suspense>
       </Canvas>
+      */}
     </div>
   )
 }

@@ -1,36 +1,73 @@
 'use client'
-import { PortalGate } from './PortalGate'
 import { GodStatues } from '../environment/GodStatues'
-import { GoldAccent } from '../environment/GoldAccent'
+import { GreekColumn } from '../environment/GreekColumn'
+import { useMemo } from 'react'
+import * as THREE from 'three'
 
 export function HallOfGods({ isActive = false }: { isActive?: boolean }) {
+  const darkStoneMat = useMemo(() => new THREE.MeshStandardMaterial({
+    color: '#2b2131',
+    roughness: 0.7,
+    metalness: 0.2,
+  }), [])
+
+  const radius = 22;
+  const columnsCount = 16;
+
   return (
     <group>
-      <PortalGate position={[0, 0, -5]} isActive={isActive} name="legends" />
+      {/* ── THE THOLOS OF LEGENDS ── */}
+      <group position={[0, -2.5, -28]}>
+        {/* Circular Stepped Floor */}
+        <mesh position={[0, 0, 0]} material={darkStoneMat}>
+          <cylinderGeometry args={[radius + 5, radius + 6, 0.4, 64]} />
+        </mesh>
+        <mesh position={[0, 0.4, 0]} material={darkStoneMat}>
+          <cylinderGeometry args={[radius + 2, radius + 3, 0.4, 64]} />
+        </mesh>
 
+        {/* Circular Colonnade */}
+        {[...Array(columnsCount)].map((_, i) => {
+          const angle = (i / columnsCount) * Math.PI * 2;
+          const x = Math.sin(angle) * radius;
+          const z = Math.cos(angle) * radius;
+          
+          // Only show the back arc so it frames the statues rather than blocking them
+          if (z > 2) return null;
+          
+          return (
+            <GreekColumn 
+              key={i} 
+              position={[x, 0.8, z]} 
+              material={darkStoneMat} 
+              height={18} 
+              radius={1.0} 
+            />
+          )
+        })}
+
+        {/* Rotunda Architrave */}
+        <mesh position={[0, 20.5, 0]} material={darkStoneMat}>
+          <cylinderGeometry args={[radius + 2, radius + 2, 2.5, 64, 1, false, 0, Math.PI]} />
+        </mesh>
+        <mesh position={[0, 22.5, 0]} material={darkStoneMat}>
+          <cylinderGeometry args={[radius + 3, radius + 3, 1.5, 64, 1, false, 0, Math.PI]} />
+        </mesh>
+      </group>
+
+      {/* The Eternal Pantheon of Gods in a semi-circle */}
       <GodStatues
         gods={[
-          { god: 'ares', position: [-8, 0, -4], scale: 1.3 },
-          { god: 'aphrodite', position: [-4, 0, -4], scale: 1.2 },
-          { god: 'athena', position: [0, 0, -6], scale: 1.4 },
-          { god: 'poseidon', position: [4, 0, -4], scale: 1.2 },
-          { god: 'zeus', position: [8, 0, -4], scale: 1.3 },
+          { god: 'ares', position: [-16, 0.5, -28], scale: 1.6 },
+          { god: 'aphrodite', position: [-8, 0.5, -33], scale: 1.5 },
+          { god: 'athena', position: [0, 0.5, -35], scale: 2.0 },
+          { god: 'poseidon', position: [8, 0.5, -33], scale: 1.5 },
+          { god: 'zeus', position: [16, 0.5, -28], scale: 1.6 },
         ]}
       />
 
-      {[...Array(8)].map((_, i) => (
-        <group key={i} position={[(i - 3.5) * 3, 0, -8]}>
-          <mesh position={[0, 4, 0]}>
-            <cylinderGeometry args={[0.4, 0.5, 8, 10]} />
-            <meshStandardMaterial color="#d4af37" roughness={0.3} metalness={0.5} />
-          </mesh>
-        </group>
-      ))}
-
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
-        <planeGeometry args={[30, 30]} />
-        <meshStandardMaterial color="#2d1b4e" roughness={0.5} />
-      </mesh>
+      <pointLight position={[0, 20, -20]} intensity={7} color="#d4af37" distance={70} />
+      <ambientLight intensity={0.15} />
     </group>
   )
 }

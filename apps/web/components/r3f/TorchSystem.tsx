@@ -24,15 +24,14 @@ const flameVertexShader = /* glsl */`
 
 const flameFragmentShader = /* glsl */`
   uniform float uTime;
+  uniform vec3 uBaseColor;
+  uniform vec3 uMidColor;
+  uniform vec3 uTipColor;
   varying float vHeight;
 
   void main() {
-    vec3 base  = vec3(0.545, 0.188, 0.063);
-    vec3 mid   = vec3(0.851, 0.471, 0.125);
-    vec3 tip   = vec3(0.961, 0.816, 0.376);
-
-    vec3 col = mix(base, mid, vHeight);
-    col = mix(col, tip, smoothstep(0.5, 1.0, vHeight));
+    vec3 col = mix(uBaseColor, uMidColor, vHeight);
+    col = mix(col, uTipColor, smoothstep(0.5, 1.0, vHeight));
 
     float alpha = 1.0 - vHeight * 0.6;
     alpha *= 0.9 + 0.1 * sin(uTime * 8.0 + vHeight * 3.0);
@@ -43,22 +42,38 @@ const flameFragmentShader = /* glsl */`
 
 interface TorchSystemProps {
   positions: [number, number, number][]
+  color?: string
+  flameColors?: {
+    base: [number, number, number]
+    mid: [number, number, number]
+    tip: [number, number, number]
+  }
 }
 
-export function TorchSystem({ positions }: TorchSystemProps) {
+export function TorchSystem({ 
+  positions, 
+  color = "#D97820", 
+  flameColors = {
+    base: [0.545, 0.188, 0.063],
+    mid: [0.851, 0.471, 0.125],
+    tip: [0.961, 0.816, 0.376]
+  }
+}: TorchSystemProps) {
   const flameMaterial = useMemo(() => new ShaderMaterial({
     vertexShader: flameVertexShader,
     fragmentShader: flameFragmentShader,
     uniforms: {
       uTime:   { value: 0 },
       uHeight: { value: 0.8 },
+      uBaseColor: { value: new THREE.Vector3(...flameColors.base) },
+      uMidColor: { value: new THREE.Vector3(...flameColors.mid) },
+      uTipColor: { value: new THREE.Vector3(...flameColors.tip) },
     },
     transparent: true,
     depthWrite: false,
-  }), [])
+  }), [flameColors])
 
   useFrame(({ clock }) => {
-    // eslint-disable-next-line react-hooks/immutability
     flameMaterial.uniforms.uTime.value = clock.elapsedTime
   })
 
@@ -80,19 +95,19 @@ export function TorchSystem({ positions }: TorchSystemProps) {
           {/* Ember particles */}
           <Sparkles
             count={20}
-            scale={0.5}
+            scale={0.8}
             size={1.5}
-            speed={0.4}
-            opacity={0.6}
-            color="#F5C840"
+            speed={0.6}
+            opacity={0.8}
+            color={color}
             position={[0, 0.4, 0]}
           />
-
-          {/* Orange point light */}
+          
+          {/* Point light */}
           <pointLight
-            color="#D97820"
-            intensity={2.5}
-            distance={8}
+            color={color}
+            intensity={5.0}
+            distance={10}
             decay={2}
             castShadow={false}
           />
@@ -101,3 +116,5 @@ export function TorchSystem({ positions }: TorchSystemProps) {
     </>
   )
 }
+
+import * as THREE from 'three'
