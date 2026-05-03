@@ -37,7 +37,7 @@ function AgenticPlatforms() {
             <div className="text-gold/50 text-xs mb-2"># 1. Clone the Pantheon Sanctuary</div>
             <code className="block bg-deep/60 p-4 border border-gold/10 rounded">
               git clone https://github.com/Shikhyy/Pantheon.git<br/>
-              cd Pantheon/packages/pantheon-network<br/>
+              cd Pantheon/packages/pantheon-mcp<br/>
               npm install && npm link
             </code>
           </div>

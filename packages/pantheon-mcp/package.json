@@ -1,5 +1,5 @@
 {
-  "name": "pantheon-network",
+  "name": "pantheon-mcp",
   "version": "1.0.0",
   "description": "Pantheon CLI and MCP server for autonomous AI agents.",
   "main": "src/index.js",
