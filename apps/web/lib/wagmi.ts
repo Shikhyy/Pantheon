@@ -5,11 +5,14 @@ import { getDefaultConfig } from '@rainbow-me/rainbowkit'
 
 // 0G Testnet chain definition
 export const ogTestnet = {
-  id: 16601,
+  id: 16602,
   name: '0G Galileon Testnet',
   nativeCurrency: { name: '0G', symbol: 'OG', decimals: 18 },
   rpcUrls: {
-    default: { http: ['https://evmrpc-testnet.0g.ai'] },
+    default: { http: [
+      'https://evmrpc-testnet.0g.ai',
+      'https://0g-testnet-rpc-evm.lavenderfive.com'
+    ] },
   },
   blockExplorers: {
     default: {
@@ -40,8 +43,8 @@ export const wagmiConfig = getDefaultConfig({
   transports: {
     [ogTestnet.id]: http(process.env.NEXT_PUBLIC_RPC_URL ?? 'https://evmrpc-testnet.0g.ai'),
     [localAnvil.id]: http('http://127.0.0.1:8545'),
-    [mainnet.id]: http(),
-    [sepolia.id]: http(),
+    [mainnet.id]: http('https://cloudflare-eth.com'),
+    [sepolia.id]: http('https://ethereum-sepolia-rpc.publicnode.com'),
   },
   ssr: true,
 })

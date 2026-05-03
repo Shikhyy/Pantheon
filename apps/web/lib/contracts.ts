@@ -192,6 +192,16 @@ export const AGORA_POOL_ABI = [
 
 export const ENS_SUBNAMES_ABI = [
   {
+    name: 'registerSubname',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'name', type: 'string' },
+      { name: 'tokenId', type: 'uint256' },
+    ],
+    outputs: [],
+  },
+  {
     name: 'setText',
     type: 'function',
     stateMutability: 'nonpayable',
@@ -294,7 +304,7 @@ const UNISWAP_V3_ROUTER_MAINNET = '0xE592427A0AEce92De3Edee1F18E0157C05861564'
 const UNISWAP_V3_ROUTER_SEPOLIA = '0x3bFA4769FB09e5C2F2dB9844f1d6f8FB6f1D8b44'
 
 export function getUniswapRouterAddress(chainId: number): `0x${string}` {
-  if (chainId === 16600 || chainId === 1) return UNISWAP_V3_ROUTER_MAINNET
+  if (chainId === 16602 || chainId === 1) return UNISWAP_V3_ROUTER_MAINNET
   return UNISWAP_V3_ROUTER_SEPOLIA as `0x${string}`
 }
 

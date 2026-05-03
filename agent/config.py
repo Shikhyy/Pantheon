@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     OG_COMPUTE_URL: str = "https://compute-testnet.0g.ai"
     OG_STORAGE_URL: str = "https://storage-testnet.0g.ai"
     OG_PRIVATE_KEY: str = "0x0000000000000000000000000000000000000000000000000000000000000001"
-    OG_CHAIN_ID: int = 16600
+    OG_CHAIN_ID: int = 16602
 
     # ENS
     ENS_SUBNAME_REGISTRAR: str = "0x0000000000000000000000000000000000000000"
