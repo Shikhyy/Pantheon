@@ -20,13 +20,9 @@ export interface BattleState {
 }
 
 export function useBattle(battleId: string) {
-  const [battleIdBytes, setBattleIdBytes] = useState<`0x${string}`>('0x0000000000000000000000000000000000000000000000000000000000000000')
-
-  useEffect(() => {
-    if (battleId && battleId.length > 2) {
-      setBattleIdBytes(pad(stringToHex(battleId), { size: 32 }))
-    }
-  }, [battleId])
+  const battleIdBytes = battleId && battleId.length > 2
+    ? pad(stringToHex(battleId), { size: 32 })
+    : '0x0000000000000000000000000000000000000000000000000000000000000000'
 
   const { data, isLoading, error, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.battleArena,

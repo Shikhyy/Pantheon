@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useRef } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
@@ -10,7 +10,7 @@ interface GreekSkyProps {
 export function GreekSky({ starCount = 2000 }: GreekSkyProps) {
   const starsRef = useRef<THREE.Points>(null)
 
-  const { positions, sizes } = useMemo(() => {
+  const [{ positions, sizes }] = useState(() => {
     const positions = new Float32Array(starCount * 3)
     const sizes = new Float32Array(starCount)
 
@@ -25,7 +25,7 @@ export function GreekSky({ starCount = 2000 }: GreekSkyProps) {
       sizes[i] = Math.random() * 2 + 0.5
     }
     return { positions, sizes }
-  }, [starCount])
+  })
 
   useFrame(({ clock }) => {
     if (starsRef.current) {

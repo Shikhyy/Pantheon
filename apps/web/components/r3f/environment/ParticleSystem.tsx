@@ -1,5 +1,5 @@
 'use client'
-import { useRef, useMemo } from 'react'
+import { useRef, useState, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
@@ -11,7 +11,7 @@ interface ParticleSystemProps {
 export function ParticleSystem({ type = 'embers', count = 50 }: ParticleSystemProps) {
   const meshRef = useRef<THREE.Points>(null)
 
-  const { positions, velocities, colors } = useMemo(() => {
+  const [{ positions, velocities, colors }] = useState(() => {
     const positions = new Float32Array(count * 3)
     const velocities = new Float32Array(count * 3)
     const colors = new Float32Array(count * 3)
@@ -36,7 +36,7 @@ export function ParticleSystem({ type = 'embers', count = 50 }: ParticleSystemPr
       }
     }
     return { positions, velocities, colors }
-  }, [count, type])
+  })
 
   useFrame(({ clock }) => {
     if (!meshRef.current) return

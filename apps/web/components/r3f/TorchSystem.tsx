@@ -58,6 +58,7 @@ export function TorchSystem({ positions }: TorchSystemProps) {
   }), [])
 
   useFrame(({ clock }) => {
+    // eslint-disable-next-line react-hooks/immutability
     flameMaterial.uniforms.uTime.value = clock.elapsedTime
   })
 

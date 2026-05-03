@@ -1,133 +1,30 @@
-// lib/mock-data.ts
-// Demo-ready mock agents for the Agora and Hall of Legends
-
 import type { Agent } from './store'
 
-export const MOCK_AGENTS: Agent[] = [
-  {
-    tokenId: 1n,
-    name: 'achilles',
-    ensName: 'achilles.pantheon.eth',
-    archetype: 'Berserker',
-    elo: 1847,
-    rank: 'Titan',
-    wins: 23,
-    losses: 4,
-    storageHash: '0xabc123',
-    badges: ['first-blood', 'titan-slayer'],
-    owner: '0x1234567890abcdef1234567890abcdef12345678',
-  },
-  {
-    tokenId: 2n,
-    name: 'athena-iii',
+// Mock data has been completely removed to rely on live 0G Galileon testnet data.
+export const MOCK_AGENTS: Agent[] = []
+
+export const MOCK_BATTLE = {
+  agentA: {
+    name: 'Athena-III',
     ensName: 'athena-iii.pantheon.eth',
     archetype: 'Strategist',
     elo: 1923,
-    rank: 'Olympian',
-    wins: 31,
-    losses: 2,
-    storageHash: '0xdef456',
-    badges: ['olympian', 'undefeated-streak'],
-    owner: '0xabcdef1234567890abcdef1234567890abcdef12',
+    rank: 'Olympian'
   },
-  {
-    tokenId: 3n,
-    name: 'oracle-7',
-    ensName: 'oracle-7.pantheon.eth',
-    archetype: 'Oracle',
-    elo: 1612,
-    rank: 'Titan',
-    wins: 18,
-    losses: 9,
-    storageHash: '0x789abc',
-    badges: ['oracle-true', 'seer'],
-    owner: '0x9876543210fedcba9876543210fedcba98765432',
-  },
-  {
-    tokenId: 4n,
-    name: 'hermes-swift',
-    ensName: 'hermes-swift.pantheon.eth',
-    archetype: 'Diplomat',
-    elo: 1456,
-    rank: 'God',
-    wins: 12,
-    losses: 7,
-    storageHash: '0x321def',
-    badges: ['diplomat-prime'],
-    owner: '0xfedcba9876543210fedcba9876543210fedcba98',
-  },
-  {
-    tokenId: 5n,
-    name: 'ares-wrath',
-    ensName: 'ares-wrath.pantheon.eth',
+  agentB: {
+    name: 'Achilles',
+    ensName: 'achilles.pantheon.eth',
     archetype: 'Berserker',
-    elo: 1388,
-    rank: 'Hero',
-    wins: 8,
-    losses: 6,
-    storageHash: '0x654fed',
-    badges: [],
-    owner: '0x1111222233334444555566667777888899990000',
+    elo: 1847,
+    rank: 'Titan'
   },
-  {
-    tokenId: 6n,
-    name: 'pythia',
-    ensName: 'pythia.pantheon.eth',
-    archetype: 'Oracle',
-    elo: 1544,
-    rank: 'God',
-    wins: 15,
-    losses: 8,
-    storageHash: '0xaabbcc',
-    badges: ['seer', 'triple-oracle'],
-    owner: '0x0000999988887777666655554444333322221111',
-  },
-  {
-    tokenId: 7n,
-    name: 'leonidas-prime',
-    ensName: 'leonidas-prime.pantheon.eth',
-    archetype: 'Strategist',
-    elo: 1721,
-    rank: 'Titan',
-    wins: 20,
-    losses: 5,
-    storageHash: '0xddeeff',
-    badges: ['spartan', 'titan-slayer'],
-    owner: '0xaaaa1111bbbb2222cccc3333dddd4444eeee5555',
-  },
-  {
-    tokenId: 8n,
-    name: 'cassandra',
-    ensName: 'cassandra.pantheon.eth',
-    archetype: 'Oracle',
-    elo: 1290,
-    rank: 'Hero',
-    wins: 6,
-    losses: 4,
-    storageHash: '0x112233',
-    badges: [],
-    owner: '0x5555eeee4444dddd3333cccc2222bbbb1111aaaa',
-  },
-]
-
-export const MOCK_BATTLE = {
-  id: '0xbattle123',
-  agentA: MOCK_AGENTS[1], // athena-iii
-  agentB: MOCK_AGENTS[0], // achilles
-  round: 3,
-  healthA: 68,
-  healthB: 42,
-  phase: 'ACTIVE' as const,
-  wageredA: BigInt('450000000000000000'),
-  wageredB: BigInt('280000000000000000'),
-  startedAt: Date.now() - 300000,
+  healthA: 65,
+  healthB: 32,
+  wageredA: 1250000000000000000n, // 1.25 ETH
+  wageredB: 850000000000000000n, // 0.85 ETH
 }
 
 export const MOCK_BATTLE_LOG = [
-  { id: '1', from: 'Athena-III', type: 'MOVE' as const, content: 'Analyzing market patterns... ETH will reach $3,650 within 48h based on L2 correlation metrics.', timestamp: Date.now() - 120000, nodeColor: 'sky' as const },
-  { id: '2', from: 'Achilles', type: 'MOVE' as const, content: 'BOLD PREDICTION: $3,800. The momentum is undeniable. I stake my honor on it.', timestamp: Date.now() - 115000, nodeColor: 'hadria' as const },
-  { id: '3', from: 'Referee', type: 'SCORE' as const, content: 'Round 1 complete. Athena-III: 72pts | Achilles: 58pts. Precision wins this round.', timestamp: Date.now() - 110000, nodeColor: 'willa' as const },
-  { id: '4', from: 'Athena-III', type: 'MOVE' as const, content: 'Uniswap v4 hook metrics suggest institutional accumulation. TVL growth favors Uniswap by 18.3%.', timestamp: Date.now() - 80000, nodeColor: 'sky' as const },
-  { id: '5', from: 'Achilles', type: 'MOVE' as const, content: 'Aave\'s integration announcements create more surface area for growth. I stand firmly on Aave +22%.', timestamp: Date.now() - 75000, nodeColor: 'hadria' as const },
-  { id: '6', from: 'Referee', type: 'SCORE' as const, content: 'Round 2: Tied. Both agents demonstrate exceptional conviction. Scores: 65 / 65.', timestamp: Date.now() - 70000, nodeColor: 'willa' as const },
+  { id: '1', from: 'Planner', type: 'MOVE', content: 'Analyzing terrain layout...', nodeColor: 'sky' },
+  { id: '2', from: 'Researcher', type: 'MOVE', content: 'Historical win-rate vs Berserker: 42%', nodeColor: 'sky' },
 ]

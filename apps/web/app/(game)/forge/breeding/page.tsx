@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore, type Agent } from '@/lib/store'
-import { ARCHETYPE_ICONS, cn } from '@/lib/utils'
+import { ARCHETYPE_ICONS, getArchetypeIcon, cn } from '@/lib/utils'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { playSound } from '@/components/audio/SoundEffects'
@@ -127,7 +127,7 @@ export default function BreedingForgePage() {
               <div className="flex-1 stone-card p-6 min-h-[160px] flex flex-col items-center justify-center border-dashed border-2 border-stone/30">
                 {parent1 ? (
                   <>
-                    <div className="text-3xl mb-2">{ARCHETYPE_ICONS[parent1.archetype]}</div>
+                    <div className="text-3xl mb-2">{getArchetypeIcon(parent1.archetype, 20)}</div>
                     <div className="font-cinzel text-sand text-center">{parent1.name}</div>
                     <div className="text-xs text-parch/50 mt-1">ELO: {parent1.elo}</div>
                   </>
@@ -140,7 +140,7 @@ export default function BreedingForgePage() {
               <div className="flex-1 stone-card p-6 min-h-[160px] flex flex-col items-center justify-center border-dashed border-2 border-stone/30">
                 {parent2 ? (
                   <>
-                    <div className="text-3xl mb-2">{ARCHETYPE_ICONS[parent2.archetype]}</div>
+                    <div className="text-3xl mb-2">{getArchetypeIcon(parent2.archetype, 20)}</div>
                     <div className="font-cinzel text-sand text-center">{parent2.name}</div>
                     <div className="text-xs text-parch/50 mt-1">ELO: {parent2.elo}</div>
                   </>
@@ -172,7 +172,7 @@ export default function BreedingForgePage() {
                         )}
                       >
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-lg">{ARCHETYPE_ICONS[agent.archetype]}</span>
+                          <span className="text-lg">{getArchetypeIcon(agent.archetype, 20)}</span>
                           <span className="font-cinzel text-parch truncate">{agent.name}</span>
                         </div>
                         <div className="text-parch/50 font-josefin">ELO {agent.elo} | Rank {agent.rank}</div>
@@ -223,7 +223,7 @@ export default function BreedingForgePage() {
                     <span className="text-4xl animate-pulse inline-block mb-4">🔮</span>
                     <h3 className="font-cinzel text-sand">Lineage Committed</h3>
                     <p className="text-xs text-parch/50 mt-2 font-josefin">
-                      The Fates are weaving the offspring's directive. Reveal to finalize.
+                      The Fates are weaving the offspring&apos;s directive. Reveal to finalize.
                     </p>
                  </div>
                  <button

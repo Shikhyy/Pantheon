@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MOCK_AGENTS } from '@/lib/mock-data'
+import { MOCK_AGENTS } from '@/lib/mock-data' // Will be deleted, keeping only for type reference temporarily
 import type { Agent, Archetype, Rank } from '@/lib/store'
+import { useAllAgents, LiveAgent } from '@/lib/hooks/use-all-agents'
 import { cn, getArchetypeColor, getRankClass, winRate, ARCHETYPE_ICONS } from '@/lib/utils'
 import Link from 'next/link'
 import { useGameStore } from '@/lib/store'
@@ -14,6 +15,7 @@ import { useTokenSwap, useTokenApproval, getFeeTier } from '@/lib/hooks/use-toke
 import { getRecommendedToken } from '@/lib/uniswap-api'
 import { toast } from 'sonner'
 import { playSound } from '@/components/audio/SoundEffects'
+import { Swords, X, TrendingUp, Coins, Activity } from 'lucide-react'
 
 const RANK_FILTERS: (Rank | 'All')[] = ['All', 'Olympian', 'Titan', 'God', 'Hero', 'Demigod']
 const SORT_OPTIONS = ['ELO', 'Win Rate', 'Battles', 'Newest']
@@ -64,7 +66,9 @@ function TokenSwapSection() {
     <div className="mb-4 p-3 border border-gold/20 bg-gold/5">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-josefin text-parch/60">Swap ETH for WETH</span>
-        <button onClick={() => setShowSwap(false)} className="text-xs text-parch/30">✕</button>
+        <button onClick={() => setShowSwap(false)} className="text-xs text-parch/30 flex items-center gap-1">
+  <X size={10} />
+</button>
       </div>
       <div className="flex gap-2">
         <input
@@ -91,13 +95,17 @@ function TokenSwapSection() {
   )
 }
 
-function AgentCard({ agent, onSelect }: { agent: Agent; onSelect: (a: Agent) => void }) {
+function AgentCard({ agent, onSelect }: { agent: LiveAgent; onSelect: (a: LiveAgent) => void }) {
   const wr = winRate(agent.wins, agent.losses)
   const archetypeClass = getArchetypeColor(agent.archetype)
   const rankClass = getRankClass(agent.rank)
 
   return (
     <motion.button
+      variants={{
+        hidden: { opacity: 0, y: 20 },
+        show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
+      }}
       id={`agent-card-${agent.name}`}
       onClick={() => onSelect(agent)}
       className="stone-card shimmer-line w-full text-left p-5 group"
@@ -108,13 +116,18 @@ function AgentCard({ agent, onSelect }: { agent: Agent; onSelect: (a: Agent) => 
 
       {/* Archetype icon + rank */}
       <div className="flex items-center justify-between mb-3">
-        <span className="text-2xl">{ARCHETYPE_ICONS[agent.archetype]}</span>
+        <span className="text-2xl">
+  {(() => {
+    const Icon = ARCHETYPE_ICONS[agent.archetype as keyof typeof ARCHETYPE_ICONS]
+    return Icon ? <Icon size={20} /> : <span />
+  })()}
+</span>
         <span className={cn('rank-pill', rankClass)}>{agent.rank}</span>
       </div>
 
       {/* Agent name */}
       <div className="font-cinzel text-sm text-sand mb-0.5 tracking-widest">{agent.name}</div>
-      <div className="section-label text-[7px] text-parch/25 mb-4">{agent.ensName}</div>
+      <div className="section-label text-[7px] text-parch/25 mb-4">{`${agent.name.toLowerCase()}.agent.eth`}</div>
 
       {/* Archetype */}
       <div className={cn('font-cinzel text-[8px] tracking-widest uppercase mb-4', archetypeClass)}>
@@ -136,22 +149,11 @@ function AgentCard({ agent, onSelect }: { agent: Agent; onSelect: (a: Agent) => 
           <div className="section-label text-[6px]">Battles</div>
         </div>
       </div>
-
-      {/* Badges */}
-      {agent.badges.length > 0 && (
-        <div className="flex gap-1 mt-3 flex-wrap">
-          {agent.badges.slice(0, 3).map(b => (
-            <span key={b} className="font-cinzel text-[6px] tracking-wide uppercase border border-gold/20 text-gold/50 px-1.5 py-0.5">
-              {b}
-            </span>
-          ))}
-        </div>
-      )}
     </motion.button>
   )
 }
 
-function AgentModal({ agent, onClose }: { agent: Agent; onClose: () => void }) {
+function AgentModal({ agent, onClose }: { agent: LiveAgent; onClose: () => void }) {
   const wr = winRate(agent.wins, agent.losses)
   const { isConnected } = useAccount()
   const myAgents = useGameStore(s => s.ownedAgents)
@@ -179,7 +181,7 @@ function AgentModal({ agent, onClose }: { agent: Agent; onClose: () => void }) {
         functionName: 'challenge',
         args: [
           selectedMyAgent.tokenId,
-          agent.tokenId,
+          BigInt(agent.id),
           '0x0000000000000000000000000000000000000000', // Mock Wager Token (ETH)
           parseEther(wagerAmount)
         ],
@@ -208,19 +210,24 @@ function AgentModal({ agent, onClose }: { agent: Agent; onClose: () => void }) {
         exit={{ scale: 0.9, y: 20 }}
       >
         {/* Close */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 font-cinzel text-[8px] text-parch/30 hover:text-parch/60 tracking-widest"
-        >
-          ✕ CLOSE
-        </button>
+<button
+  onClick={onClose}
+  className="absolute top-4 right-4 font-cinzel text-[8px] text-parch/30 hover:text-parch/60 tracking-widest flex items-center gap-1"
+>
+  <X size={10} /> CLOSE
+</button>
 
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
-          <span className="text-4xl">{ARCHETYPE_ICONS[agent.archetype]}</span>
+          <span className="text-4xl">
+  {(() => {
+    const Icon = ARCHETYPE_ICONS[agent.archetype as keyof typeof ARCHETYPE_ICONS]
+    return Icon ? <Icon size={36} /> : <span />
+  })()}
+</span>
           <div>
             <div className="font-cinzel text-xl text-sand">{agent.name}</div>
-            <div className="section-label text-[7px] text-parch/30">{agent.ensName}</div>
+            <div className="section-label text-[7px] text-parch/30">{`${agent.name.toLowerCase()}.agent.eth`}</div>
             <div className={cn('font-cinzel text-[8px] tracking-widest uppercase mt-1', getArchetypeColor(agent.archetype))}>
               {agent.archetype}
             </div>
@@ -247,36 +254,25 @@ function AgentModal({ agent, onClose }: { agent: Agent; onClose: () => void }) {
           </div>
         </div>
 
-        {/* Rank + Badges */}
+        {/* Rank */}
         <div className="flex items-center gap-2 mb-6 flex-wrap">
           <span className={cn('rank-pill', getRankClass(agent.rank))}>{agent.rank}</span>
-          {agent.badges.map(b => (
-            <span key={b} className="font-cinzel text-[7px] tracking-wide uppercase border border-gold/20 text-gold/50 px-2 py-0.5">
-              {b}
-            </span>
-          ))}
         </div>
-
-        {/* Lineage */}
-        {agent.lineage && (
-          <div className="mb-4 text-xs font-josefin text-parch/30">
-            Bred from #{agent.lineage.parent1.toString()} × #{agent.lineage.parent2.toString()}
-          </div>
-        )}
 
         {/* CTA or Challenge Mode */}
         {!challengeMode ? (
           <div className="flex gap-3 mt-4">
-            <button
-              id={`challenge-${agent.name}`}
-              onClick={() => {
-                if (!isConnected) toast.error('Connect wallet to challenge.')
-                else setChallengeMode(true)
-              }}
-              className="btn-gold flex-1"
-            >
-              <span>⚔ Issue Challenge</span>
-            </button>
+<button
+  id={`challenge-${agent.name}`}
+  onClick={() => {
+    if (!isConnected) toast.error('Connect wallet to challenge.')
+    else setChallengeMode(true)
+  }}
+  className="btn-gold flex-1 flex items-center gap-2 justify-center"
+>
+  <Swords size={14} />
+  <span>Issue Challenge</span>
+</button>
             <Link href={`/colosseum/demo`} className="btn-ghost">
               Watch Live
             </Link>
@@ -299,7 +295,12 @@ function AgentModal({ agent, onClose }: { agent: Agent; onClose: () => void }) {
                     )}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-xl">{ARCHETYPE_ICONS[a.archetype]}</span>
+                      <span className="text-xl">
+  {(() => {
+    const Icon = ARCHETYPE_ICONS[a.archetype as keyof typeof ARCHETYPE_ICONS]
+    return <Icon size={20} />
+  })()}
+</span>
                       <span className="font-cinzel text-xs text-parch">{a.name}</span>
                     </div>
                   </button>
@@ -339,13 +340,105 @@ function AgentModal({ agent, onClose }: { agent: Agent; onClose: () => void }) {
   )
 }
 
+function WagerPanel() {
+  const [userBet, setUserBet] = useState<{ agent: 'A' | 'B'; amount: string } | null>(null)
+  const wagerPool = "128 ETH"
+  const exchangeRate = "1 ETH = 2,450 USDC via Uniswap v4"
+
+  const handleBet = (agent: 'A' | 'B') => {
+    setUserBet({ agent, amount: '0.01' })
+  }
+
+  return (
+    <div className="stone-card p-6 mb-8">
+      <h2 className="font-cinzel text-xl text-sand mb-4">Wager Pool</h2>
+      
+      <div className="mb-4">
+        <div className="font-cinzel text-2xl text-gold">{wagerPool}</div>
+        <div className="section-label text-[6px]">Total Wager Pool</div>
+      </div>
+
+      <div className="mb-6 text-xs font-josefin text-parch/60">
+        {exchangeRate}
+      </div>
+
+      {userBet && (
+        <div className="mb-6 p-3 border border-sand/20 bg-sand/5">
+          <div className="font-cinzel text-sm text-sand">Your Position</div>
+          <div className="text-xs font-josefin text-parch/80 mt-1">
+            Bet {userBet.amount} ETH on Agent {userBet.agent}
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-4">
+        <button
+          onClick={() => handleBet('A')}
+          className="flex items-center justify-center gap-2 py-3 border border-sky/30 text-sky hover:bg-sky/10 transition-colors font-cinzel text-sm uppercase tracking-wider"
+        >
+          <Swords size={16} />
+          Bet Agent A
+        </button>
+        <button
+          onClick={() => handleBet('B')}
+          className="flex items-center justify-center gap-2 py-3 border border-hadria/30 text-hadria hover:bg-hadria/10 transition-colors font-cinzel text-sm uppercase tracking-wider"
+        >
+          <Swords size={16} />
+          Bet Agent B
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function YieldVaultPanel() {
+  return (
+    <div className="stone-card p-6 mb-8 relative overflow-hidden group">
+      {/* Decorative gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-olivine/5 opacity-50 pointer-events-none" />
+      
+      <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <TrendingUp size={20} className="text-olivine" />
+            <h2 className="font-cinzel text-xl text-sand">DeFi Yield Vault</h2>
+          </div>
+          <p className="font-josefin text-xs text-parch/60 max-w-md">
+            Idle wagers in the Agora Pool are automatically staked into Uniswap V3 liquidity pools. 
+            Spectators earn passive yield while anticipating battle outcomes.
+          </p>
+        </div>
+        
+        <div className="flex gap-6 w-full md:w-auto border border-stone/20 bg-deep/40 p-4 backdrop-blur-sm">
+          <div>
+            <div className="flex items-center gap-1.5 mb-1">
+              <Coins size={12} className="text-gold" />
+              <span className="section-label text-[8px] text-parch/40">Total Value Locked</span>
+            </div>
+            <div className="font-cinzel text-xl text-gold">4,192.5 ETH</div>
+          </div>
+          
+          <div className="w-px bg-stone/20" />
+          
+          <div>
+            <div className="flex items-center gap-1.5 mb-1">
+              <Activity size={12} className="text-olivine animate-pulse" />
+              <span className="section-label text-[8px] text-parch/40">Current APY</span>
+            </div>
+            <div className="font-cinzel text-xl text-olivine">12.4%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function AgoraPage() {
   const [rankFilter, setRankFilter] = useState<Rank | 'All'>('All')
   const [sortBy, setSortBy] = useState('ELO')
-  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
+  const [selectedAgent, setSelectedAgent] = useState<LiveAgent | null>(null)
 
-  // Use mock data for demo - in production, fetch from contract
-  const displayAgents = MOCK_AGENTS
+  const { agents: displayAgents, isLoading } = useAllAgents()
 
   const filtered = displayAgents
     .filter(a => rankFilter === 'All' || a.rank === rankFilter)
@@ -353,7 +446,7 @@ export default function AgoraPage() {
       if (sortBy === 'ELO') return b.elo - a.elo
       if (sortBy === 'Win Rate') return winRate(b.wins, b.losses) - winRate(a.wins, a.losses)
       if (sortBy === 'Battles') return (b.wins + b.losses) - (a.wins + a.losses)
-      return Number(b.tokenId - a.tokenId)
+      return Number(b.id) - Number(a.id)
     })
 
   return (
@@ -367,9 +460,12 @@ export default function AgoraPage() {
             Agent Marketplace
           </h1>
           <p className="font-fell italic text-parch/50">
-            {MOCK_AGENTS.length} gods await your challenge
+            {isLoading ? 'Summoning the pantheon...' : `${displayAgents.length} gods await your challenge`}
           </p>
         </div>
+
+        {/* DeFi Yield Vault */}
+        <YieldVaultPanel />
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-4 mb-8 p-4 glass-panel">
@@ -414,11 +510,31 @@ export default function AgoraPage() {
         </div>
 
         {/* Agent grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filtered.map(agent => (
-            <AgentCard key={agent.tokenId.toString()} agent={agent} onSelect={setSelectedAgent} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="py-20 text-center text-parch/40 font-josefin">Syncing with 0G Chain...</div>
+        ) : filtered.length === 0 ? (
+          <div className="py-20 text-center text-parch/40 font-josefin">No agents found. Forge one!</div>
+        ) : (
+          <motion.div
+            variants={{
+              hidden: { opacity: 0 },
+              show: {
+                opacity: 1,
+                transition: { staggerChildren: 0.1 }
+              }
+            }}
+            initial="hidden"
+            animate="show"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+          >
+            {filtered.map(agent => (
+              <AgentCard key={agent.id} agent={agent} onSelect={setSelectedAgent} />
+            ))}
+          </motion.div>
+        )}
+
+        {/* Wager Panel */}
+        <WagerPanel />
 
         {/* Agent modal */}
         <AnimatePresence>

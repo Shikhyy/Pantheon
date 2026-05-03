@@ -1,16 +1,30 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { MOCK_AGENTS } from '@/lib/mock-data'
+import { useAllAgents } from '@/lib/hooks/use-all-agents'
 import { useAgentByENSName } from '@/lib/hooks/use-agent-discovery'
 import { cn, winRate, ARCHETYPE_ICONS } from '@/lib/utils'
+import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { Search, Trophy } from 'lucide-react'
 
 export default function LegendsPage() {
   const [searchName, setSearchName] = useState('')
-  const { agent: searchedAgent, isLoading } = useAgentByENSName(searchName)
-  const sorted = useMemo(() => [...MOCK_AGENTS].sort((a, b) => b.elo - a.elo), [])
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+
+  const copyToClipboard = async (text: string, id: string) => {
+    await navigator.clipboard.writeText(text)
+    setCopiedId(id)
+    setTimeout(() => setCopiedId(null), 2000)
+  }
+  const { agents, isLoading: isAgentsLoading } = useAllAgents()
+  
+  const sorted = useMemo(() => {
+    return [...agents].sort((a, b) => b.elo - a.elo)
+  }, [agents])
+  
   const champion = sorted[0]
+  // eslint-disable-next-line react-hooks/purity
   const daysLeft = useMemo(() => Math.ceil((new Date('2026-05-08').getTime() - Date.now()) / (1000 * 60 * 60 * 24)), [])
 
   return (
@@ -28,7 +42,9 @@ export default function LegendsPage() {
 
         {/* Agent Search by ENS */}
         <div className="glass-panel p-4 mb-8">
-          <div className="section-label mb-3">🔍 Agent Discovery</div>
+          <div className="section-label mb-3 flex items-center gap-1">
+  <Search size={10} /> Agent Discovery
+</div>
           <div className="flex gap-2">
             <input
               type="text"
@@ -59,32 +75,45 @@ export default function LegendsPage() {
         </div>
 
         {/* Champion spotlight */}
-        <div className="border border-gold/30 bg-gold/5 p-8 mb-8 relative overflow-hidden">
-          <div className="absolute top-3 right-4 section-label text-[7px] text-gold/40">SEASON CHAMPION</div>
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
-          <div className="flex items-center gap-6">
-            <div className="text-6xl">{ARCHETYPE_ICONS[champion.archetype]}</div>
-            <div className="flex-1">
-              <div className="font-cinzel-dec text-2xl text-gold mb-1">{champion.name}</div>
-              <div className="font-cinzel text-xs text-parch/40 tracking-widest mb-3">{champion.ensName}</div>
-              <div className="flex gap-6">
-                <div>
-                  <div className="font-cinzel text-2xl text-gold">{champion.elo.toLocaleString()}</div>
-                  <div className="section-label text-[6px]">ELO</div>
-                </div>
-                <div>
-                  <div className="font-cinzel text-2xl text-olivine">{champion.wins}</div>
-                  <div className="section-label text-[6px]">Wins</div>
-                </div>
-                <div>
-                  <div className="font-cinzel text-2xl text-parch/60">{winRate(champion.wins, champion.losses)}%</div>
-                  <div className="section-label text-[6px]">Win Rate</div>
+        {champion ? (
+          <div className="border border-gold/30 bg-gold/5 p-8 mb-8 relative overflow-hidden">
+            <div className="absolute top-3 right-4 section-label text-[7px] text-gold/40">SEASON CHAMPION</div>
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
+            <div className="flex items-center gap-6">
+              <div className="text-6xl">
+    {(() => {
+      const Icon = ARCHETYPE_ICONS[champion.archetype as keyof typeof ARCHETYPE_ICONS]
+      return Icon ? <Icon size={48} /> : <span />
+    })()}
+  </div>
+              <div className="flex-1">
+                <div className="font-cinzel-dec text-2xl text-gold mb-1">{champion.name}</div>
+                <div className="font-cinzel text-xs text-parch/40 tracking-widest mb-3">{`${champion.name.toLowerCase()}.agent.eth`}</div>
+                <div className="flex gap-6">
+                  <div>
+                    <div className="font-cinzel text-2xl text-gold">{champion.elo.toLocaleString()}</div>
+                    <div className="section-label text-[6px]">ELO</div>
+                  </div>
+                  <div>
+                    <div className="font-cinzel text-2xl text-olivine">{champion.wins}</div>
+                    <div className="section-label text-[6px]">Wins</div>
+                  </div>
+                  <div>
+                    <div className="font-cinzel text-2xl text-parch/60">{winRate(champion.wins, champion.losses)}%</div>
+                    <div className="section-label text-[6px]">Win Rate</div>
+                  </div>
                 </div>
               </div>
+              <div className="opacity-30 text-gold">
+    <Trophy size={36} />
+  </div>
             </div>
-            <div className="text-4xl opacity-30">🏆</div>
           </div>
-        </div>
+        ) : (
+          <div className="border border-stone/20 bg-deep/30 p-8 mb-8 text-center text-parch/40 font-josefin">
+            {isAgentsLoading ? 'Syncing Akashic records...' : 'No agents exist yet. The Pantheon is empty.'}
+          </div>
+        )}
 
         {/* Full leaderboard */}
         <div className="space-y-2">
@@ -97,14 +126,27 @@ export default function LegendsPage() {
             <div className="col-span-1 section-label text-[6px] text-right">Action</div>
           </div>
 
-          {sorted.map((agent, i) => (
-            <div
-              key={agent.tokenId.toString()}
-              className={cn(
-                'grid grid-cols-12 gap-4 items-center px-4 py-4 border transition-all duration-200 hover:border-sand/20',
-                i === 0 ? 'border-gold/30 bg-gold/5' : 'border-stone/20 bg-deep/30 hover:bg-deep/60'
-              )}
-            >
+          <motion.div
+            variants={{
+              hidden: { opacity: 0 },
+              show: { opacity: 1, transition: { staggerChildren: 0.05 } }
+            }}
+            initial="hidden"
+            animate="show"
+            className="flex flex-col gap-2"
+          >
+            {sorted.map((agent, i) => (
+              <motion.div
+                variants={{
+                  hidden: { opacity: 0, x: -20 },
+                  show: { opacity: 1, x: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
+                }}
+                key={agent.id}
+                className={cn(
+                  'grid grid-cols-12 gap-4 items-center px-4 py-4 border transition-all duration-200 hover:border-sand/20',
+                  i === 0 ? 'border-gold/30 bg-gold/5' : 'border-stone/20 bg-deep/30 hover:bg-deep/60 hover:scale-[1.01] hover:-translate-y-[1px] hover:shadow-[0_0_15px_rgba(201,168,76,0.1)]'
+                )}
+              >
               {/* Rank */}
               <div className="col-span-1">
                 <span className={cn(
@@ -117,10 +159,22 @@ export default function LegendsPage() {
 
               {/* Agent */}
               <div className="col-span-4 flex items-center gap-3">
-                <span className="text-xl">{ARCHETYPE_ICONS[agent.archetype]}</span>
+                <span className="text-xl">
+  {(() => {
+    const Icon = ARCHETYPE_ICONS[agent.archetype as keyof typeof ARCHETYPE_ICONS]
+    return <Icon size={20} />
+  })()}
+</span>
                 <div>
                   <div className="font-cinzel text-xs text-sand">{agent.name}</div>
-                  <div className="section-label text-[6px] text-parch/25">{agent.rank}</div>
+                  <div
+                    className="section-label text-[7px] text-gold/50 cursor-pointer hover:text-gold transition-colors"
+                    onClick={() => copyToClipboard(`${agent.name.toLowerCase()}.agent.eth`, agent.id)}
+                    title="Click to copy address"
+                  >
+                    {`${agent.name.toLowerCase()}.agent.eth`}
+                    {copiedId === agent.id && <span className="ml-1 text-olivine text-[6px]">Copied</span>}
+                  </div>
                 </div>
               </div>
 
@@ -156,9 +210,9 @@ export default function LegendsPage() {
                   Watch
                 </Link>
               </div>
-            </div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </motion.div>
 
         {/* Storage attribution */}
         <div className="mt-8 glass-panel p-4 text-center">

@@ -15,11 +15,13 @@ import { MarketArchway } from './scenes/MarketArchway'
 import { HallOfGods } from './scenes/HallOfGods'
 import { HephaestusForge } from './scenes/HephaestusForge'
 import { ColosseumGate } from './scenes/ColosseumGate'
+import { ParthenonGate } from './scenes/ParthenonGate'
+import { ParallaxLayer } from './ParallaxLayer'
 
 import { useOdysseyStore, OdysseySection } from '@/lib/odyssey-store'
 
 function SceneContent() {
-  const { activeSection } = useOdysseyStore()
+  const { activeSection, parallaxOffset } = useOdysseyStore()
 
   return (
     <>
@@ -39,8 +41,10 @@ function SceneContent() {
 
       {activeSection === 'landing' && (
         <>
-          <TempleOfZeus isActive={true} />
-          <ParticleSystem type="embers" count={30} />
+          <ParallaxLayer speed={0.2} parallaxOffset={parallaxOffset}>
+            <ParthenonGate />
+          </ParallaxLayer>
+          <ParticleSystem type="embers" count={50} />
         </>
       )}
       {activeSection === 'dashboard' && <TempleOfZeus isActive={true} />}

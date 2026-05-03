@@ -5,7 +5,9 @@ import Link from 'next/link'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useGSAP } from '@gsap/react'
-import { MOCK_AGENTS } from '@/lib/mock-data'
+import { useAllAgents } from '@/lib/hooks/use-all-agents'
+import { Hammer, Swords, Dna, Star } from 'lucide-react'
+import { ARCHETYPE_ICONS } from '@/lib/utils'
 
 gsap.registerPlugin(ScrollTrigger)
 gsap.registerPlugin(useGSAP)
@@ -44,10 +46,10 @@ const STORY_PANELS = [
 ]
 
 const THE_WAYS = [
-  { roman: 'I', title: 'Forge', description: 'Mint an AI god. Choose archetype, claim your ENS name, write your directive.', href: '/forge', icon: '⚒' },
-  { roman: 'II', title: 'Fight', description: 'Challenge rivals. Five rounds of AI intellect. Stakes locked in wager contracts.', href: '/agora', icon: '⚔' },
-  { roman: 'III', title: 'Breed', description: 'Combine two legends. Offspring inherit traits via 0G Compute blending.', href: '/forge', icon: '🧬' },
-  { roman: 'IV', title: 'Ascend', description: 'Rise through the ranks. Demigod to Olympian. Claim apotheosis forever on-chain.', href: '/legends', icon: '⭐' },
+  { roman: 'I', title: 'Forge', description: 'Mint an AI god. Choose archetype, claim your ENS name, write your directive.', href: '/forge', Icon: Hammer },
+  { roman: 'II', title: 'Fight', description: 'Challenge rivals. Five rounds of AI intellect. Stakes locked in wager contracts.', href: '/agora', Icon: Swords },
+  { roman: 'III', title: 'Breed', description: 'Combine two legends. Offspring inherit traits via 0G Compute blending.', href: '/forge', Icon: Dna },
+  { roman: 'IV', title: 'Ascend', description: 'Rise through the ranks. Demigod to Olympian. Claim apotheosis forever on-chain.', href: '/legends', Icon: Star },
 ]
 
 const STATS = [
@@ -59,27 +61,36 @@ const STATS = [
 
 export default function LandingPage() {
   const containerRef = useRef<HTMLDivElement>(null)
+  const { agents } = useAllAgents()
 
   useGSAP(() => {
+    // Hero section - animate immediately
+    gsap.fromTo('.hero-content',
+      { opacity: 0, y: 40 },
+      { opacity: 1, y: 0, duration: 1.2, ease: 'power3.out' }
+    )
+
     // Stagger reveal sections on scroll
     const sections = document.querySelectorAll('.reveal-section')
-    sections.forEach((section) => {
+    sections.forEach((section, i) => {
       gsap.fromTo(section,
-        { opacity: 0, y: 40 },
+        { opacity: 0, y: 60 },
         {
           opacity: 1,
           y: 0,
           duration: 0.8,
+          delay: i * 0.1,
           ease: 'power2.out',
           scrollTrigger: {
             trigger: section,
-            start: 'top 80%',
+            start: 'top 85%',
+            toggleActions: 'play none none reverse',
           },
         }
       )
     })
 
-    // Counter animations
+    // Counter animations with visibility check
     const counters = document.querySelectorAll('.stat-counter')
     counters.forEach((el) => {
       const element = el as HTMLElement
@@ -89,28 +100,59 @@ export default function LandingPage() {
       const formatter = new Intl.NumberFormat('en-US')
       const counter = { value: 0 }
 
-      element.textContent = `${prefix}${formatter.format(0)}${suffix}`
+      const updateCounter = () => {
+        element.textContent = `${prefix}${formatter.format(Math.floor(counter.value))}${suffix}`
+      }
 
-      gsap.to(counter, {
-        value: target,
-        duration: 2,
-        ease: 'power1.out',
-        scrollTrigger: {
+      // Check if already visible
+      const rect = element.getBoundingClientRect()
+      const isVisible = rect.top < window.innerHeight
+
+      if (isVisible) {
+        gsap.to(counter, {
+          value: target,
+          duration: 2,
+          ease: 'power1.out',
+          onUpdate: updateCounter,
+        })
+      } else {
+        ScrollTrigger.create({
           trigger: el,
-          start: 'top 85%',
-        },
-        onUpdate: () => {
-          element.textContent = `${prefix}${formatter.format(Math.floor(counter.value))}${suffix}`
-        },
-      })
+          start: 'top 90%',
+          once: true,
+          onEnter: () => {
+            gsap.to(counter, {
+              value: target,
+              duration: 2,
+              ease: 'power1.out',
+              onUpdate: updateCounter,
+            })
+          },
+        })
+      }
     })
+
+    // Safety check - make everything visible after 2s
+    const safetyTimeoutId = setTimeout(() => {
+      document.querySelectorAll('.reveal-section').forEach(el => {
+        const element = el as HTMLElement
+        if (getComputedStyle(element).opacity === '0') {
+          element.style.opacity = '1'
+          element.style.transform = 'none'
+        }
+      })
+    }, 2000)
+
+    return () => {
+      clearTimeout(safetyTimeoutId)
+    }
   }, { scope: containerRef })
 
   return (
     <div ref={containerRef} className="relative">
 
       {/* ── SECTION I: HERO ── */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-20">
+      <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-20 hero-content">
         <div className="max-w-4xl mx-auto">
 
           {/* Pre-title label */}
@@ -132,7 +174,7 @@ export default function LandingPage() {
               <div key={label} className="stone-card p-4">
                 <div
                   className="stat-counter font-cinzel text-xl text-gold mb-1"
-                  data-value={value}
+                  data-target={value}
                   data-prefix={prefix}
                   data-suffix={suffix}
                 >
@@ -145,9 +187,10 @@ export default function LandingPage() {
 
           {/* CTA buttons */}
           <div className="flex items-center justify-center gap-4 reveal-section">
-            <Link href="/forge" id="summon-cta" className="btn-gold text-[9px] px-8 py-4">
-              <span>⚒ Summon Your God</span>
-            </Link>
+<Link href="/forge" id="summon-cta" className="btn-gold text-[9px] px-8 py-4 flex items-center gap-2">
+  <Hammer size={14} />
+  <span>Summon Your God</span>
+</Link>
             <Link href="/agora" id="agora-cta" className="btn-ghost text-[9px] px-8 py-4">
               Enter the Agora →
             </Link>
@@ -218,24 +261,26 @@ export default function LandingPage() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {THE_WAYS.map(({ roman, title, description, href, icon }, i) => (
-              <Link
-                key={roman}
-                href={href}
-                className="stone-card shimmer-line p-6 group reveal-section"
-                style={{ animationDelay: `${i * 0.1}s` }}
-              >
-                <div className="roman-numeral text-3xl mb-4 group-hover:text-gold/20 transition-colors duration-500">
-                  {roman}
-                </div>
-                <div className="text-2xl mb-3">{icon}</div>
-                <h3 className="font-cinzel text-sm text-sand mb-2 tracking-widest uppercase">{title}</h3>
-                <p className="font-josefin text-xs text-parch/40 leading-relaxed">{description}</p>
-                <div className="mt-4 text-sand/30 group-hover:text-sand/60 transition-colors text-xs font-cinzel tracking-widest">
-                  Enter →
-                </div>
-              </Link>
-            ))}
+{THE_WAYS.map(({ roman, title, description, href, Icon }, i) => (
+  <Link
+    key={roman}
+    href={href}
+    className="stone-card shimmer-line p-6 group reveal-section"
+    style={{ animationDelay: `${i * 0.1}s` }}
+  >
+    <div className="roman-numeral text-3xl mb-4 group-hover:text-gold/20 transition-colors duration-500">
+      {roman}
+    </div>
+    <div className="mb-3 text-gold">
+      <Icon size={24} />
+    </div>
+    <h3 className="font-cinzel text-sm text-sand mb-2 tracking-widest uppercase">{title}</h3>
+    <p className="font-josefin text-xs text-parch/40 leading-relaxed">{description}</p>
+    <div className="mt-4 text-sand/30 group-hover:text-sand/60 transition-colors text-xs font-cinzel tracking-widest">
+      Enter →
+    </div>
+  </Link>
+))}
           </div>
         </div>
       </section>
@@ -249,32 +294,39 @@ export default function LandingPage() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {MOCK_AGENTS.slice(0, 4).sort((a, b) => b.elo - a.elo).map((agent, i) => (
-              <div key={agent.tokenId.toString()} className="stone-card shimmer-line p-5 text-center reveal-section">
-                {/* Rank badge */}
-                <div className="section-label text-[7px] mb-2">
-                  #{i + 1} {agent.rank}
-                </div>
-                {/* Archetype icon */}
-                <div className="text-3xl mb-3">
-                  {agent.archetype === 'Strategist' ? '⚔️' :
-                   agent.archetype === 'Oracle' ? '🔮' :
-                   agent.archetype === 'Berserker' ? '🔥' : '🕊️'}
-                </div>
-                {/* Name */}
-                <div className="font-cinzel text-xs text-sand mb-1 tracking-widest">
-                  {agent.name}
-                </div>
-                <div className="section-label text-[7px] text-parch/30 mb-3">
-                  {agent.ensName}
-                </div>
-                {/* ELO */}
-                <div className="font-cinzel text-lg text-gold">
-                  {agent.elo.toLocaleString()}
-                </div>
-                <div className="section-label text-[7px]">ELO</div>
+            {agents.length === 0 ? (
+              <div className="col-span-full py-12 text-center text-parch/40 font-josefin border border-dashed border-stone/20">
+                The Pantheon slumbers... Forge the first agent.
               </div>
-            ))}
+            ) : (
+              [...agents].sort((a, b) => b.elo - a.elo).slice(0, 4).map((agent, i) => (
+                <div key={agent.id} className="stone-card shimmer-line p-5 text-center reveal-section">
+                  {/* Rank badge */}
+                  <div className="section-label text-[7px] mb-2">
+                    #{i + 1} {agent.rank}
+                  </div>
+  {/* Archetype icon */}
+  <div className="text-3xl mb-3 flex justify-center text-gold/80">
+    {(() => {
+      const Icon = ARCHETYPE_ICONS[agent.archetype as keyof typeof ARCHETYPE_ICONS]
+      return Icon ? <Icon size={24} /> : <span />
+    })()}
+  </div>
+                  {/* Name */}
+                  <div className="font-cinzel text-xs text-sand mb-1 tracking-widest">
+                    {agent.name}
+                  </div>
+                  <div className="section-label text-[7px] text-parch/30 mb-3">
+                    {`${agent.name.toLowerCase()}.agent.eth`}
+                  </div>
+                  {/* ELO */}
+                  <div className="font-cinzel text-lg text-gold">
+                    {agent.elo.toLocaleString()}
+                  </div>
+                  <div className="section-label text-[7px]">ELO</div>
+                </div>
+              ))
+            )}
           </div>
 
           <div className="text-center mt-8 reveal-section">

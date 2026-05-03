@@ -10,6 +10,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { playSound } from '@/components/audio/SoundEffects'
 import { toast } from 'sonner'
 import { PANTHEON_AGENT_ABI, CONTRACT_ADDRESSES } from '@/lib/contracts'
+import { Hammer, Lock, Cloud, Diamond, Link, Sparkles, Check, X, Circle } from 'lucide-react'
 
 const ARCHETYPES: { id: Archetype; title: string; description: string; color: string; border: string }[] = [
   {
@@ -49,11 +50,11 @@ const DIRECTIVE_PRESETS = [
 ]
 
 const FORGE_STAGES = [
-  { icon: '🔐', label: 'Encrypting soul' },
-  { icon: '☁️', label: 'Writing to 0G Storage' },
-  { icon: '💎', label: 'Minting iNFT' },
-  { icon: '🔗', label: 'Registering ENS' },
-  { icon: '✨', label: 'Awakening' },
+  { Icon: Lock, label: 'Encrypting soul' },
+  { Icon: Cloud, label: 'Writing to 0G Storage' },
+  { Icon: Diamond, label: 'Minting iNFT' },
+  { Icon: Link, label: 'Registering ENS' },
+  { Icon: Sparkles, label: 'Awakening' },
 ]
 
 export default function ForgePage() {
@@ -136,14 +137,16 @@ export default function ForgePage() {
   if (!isConnected) {
     return (
       <div className="min-h-screen flex items-center justify-center pt-20">
-        <div className="text-center">
-          <div className="text-4xl mb-6">⚒</div>
-          <h2 className="font-cinzel text-xl text-parch mb-3">Connect to Enter the Forge</h2>
-          <p className="font-josefin text-parch/40 text-sm mb-8">
-            Your wallet is your hammer. Your directive is your fire.
-          </p>
-          <ConnectButton />
-        </div>
+<div className="text-center">
+  <div className="mb-6 text-gold">
+    <Hammer size={36} />
+  </div>
+  <h2 className="font-cinzel text-xl text-parch mb-3">Connect to Enter the Forge</h2>
+  <p className="font-josefin text-parch/40 text-sm mb-8">
+    Your wallet is your hammer. Your directive is your fire.
+  </p>
+  <ConnectButton />
+</div>
       </div>
     )
   }
@@ -179,12 +182,12 @@ export default function ForgePage() {
                   step === i ? 'text-sand' : step > i ? 'text-parch/40 cursor-pointer hover:text-parch/70' : 'text-parch/20 cursor-not-allowed'
                 )}
               >
-                <span className={cn(
-                  'w-6 h-6 flex items-center justify-center border text-[9px]',
-                  step === i ? 'border-sand text-sand' : step > i ? 'border-parch/30 text-parch/30 bg-parch/5' : 'border-parch/10 text-parch/10'
-                )}>
-                  {step > i ? '✓' : (i + 1)}
-                </span>
+<span className={cn(
+  'w-6 h-6 flex items-center justify-center border text-[9px]',
+  step === i ? 'border-sand text-sand' : step > i ? 'border-parch/30 text-parch/30 bg-parch/5' : 'border-parch/10 text-parch/10'
+)}>
+  {step > i ? <Check size={14} /> : (i + 1)}
+</span>
                 {label}
               </button>
               {i < 2 && <span className="text-stone text-lg">—</span>}
@@ -220,18 +223,23 @@ export default function ForgePage() {
                         : 'opacity-70 hover:opacity-100'
                     )}
                   >
-                    <div className="text-3xl mb-3">{ARCHETYPE_ICONS[a.id]}</div>
+                    <div className="text-3xl mb-3">
+  {(() => {
+    const Icon = ARCHETYPE_ICONS[a.id]
+    return <Icon size={24} />
+  })()}
+</div>
                     <div className={cn('font-cinzel text-sm tracking-widest uppercase mb-2', a.color)}>
                       {a.title}
                     </div>
                     <p className="font-josefin text-xs text-parch/40 leading-relaxed">
                       {a.description}
                     </p>
-                    {forgeState.archetype === a.id && (
-                      <div className="mt-3 text-[8px] font-cinzel tracking-widest text-sand/60 uppercase">
-                        ✓ Selected
-                      </div>
-                    )}
+{forgeState.archetype === a.id && (
+  <div className="mt-3 text-[8px] font-cinzel tracking-widest text-sand/60 uppercase flex items-center gap-1">
+    <Check size={10} /> Selected
+  </div>
+)}
                   </button>
                 ))}
               </div>
@@ -291,21 +299,21 @@ export default function ForgePage() {
 
                   {/* Status indicators */}
                   <div className="mt-2 h-5 flex items-center">
-                    {forgeState.nameStatus === 'checking' && (
-                      <span className="font-cinzel text-[8px] text-parch/40 tracking-widest animate-pulse">
-                        ◌ Checking the Akashic Ledger...
-                      </span>
-                    )}
-                    {forgeState.nameStatus === 'available' && (
-                      <span className="font-cinzel text-[8px] text-olivine tracking-widest">
-                        ✓ {forgeState.name}.pantheon.eth is yours to claim
-                      </span>
-                    )}
-                    {forgeState.nameStatus === 'taken' && (
-                      <span className="font-cinzel text-[8px] text-hadria tracking-widest">
-                        ✗ This name has been claimed by another god
-                      </span>
-                    )}
+{forgeState.nameStatus === 'checking' && (
+  <span className="font-cinzel text-[8px] text-parch/40 tracking-widest flex items-center gap-1 animate-pulse">
+    <Circle size={10} /> Checking the Akashic Ledger...
+  </span>
+)}
+{forgeState.nameStatus === 'available' && (
+  <span className="font-cinzel text-[8px] text-olivine tracking-widest flex items-center gap-1">
+    <Check size={10} /> {forgeState.name}.pantheon.eth is yours to claim
+  </span>
+)}
+{forgeState.nameStatus === 'taken' && (
+  <span className="font-cinzel text-[8px] text-hadria tracking-widest flex items-center gap-1">
+    <X size={10} /> This name has been claimed by another god
+  </span>
+)}
                   </div>
                 </div>
 
@@ -390,7 +398,12 @@ export default function ForgePage() {
                 <div className="mt-4 p-4 border border-stone/20 bg-deep/40">
                   <div className="section-label text-[7px] mb-2">Preview — Your Agent in the Agora</div>
                   <div className="flex items-center gap-3">
-                    <div className="text-xl">{ARCHETYPE_ICONS[forgeState.archetype ?? 'Strategist']}</div>
+                    <div className="text-xl">
+  {(() => {
+    const Icon = ARCHETYPE_ICONS[forgeState.archetype ?? 'Strategist']
+    return <Icon size={20} />
+  })()}
+</div>
                     <div>
                       <div className="font-cinzel text-xs text-sand">{forgeState.name || 'unnamed'}</div>
                       <div className="section-label text-[7px] text-parch/30">{forgeState.name}.pantheon.eth</div>
@@ -404,14 +417,15 @@ export default function ForgePage() {
 
               <div className="flex justify-between">
                 <button onClick={() => { playSound('stoneClick'); setStep(1) }} className="btn-ghost">← Back</button>
-                <button
-                  id="forge-submit"
-                  onClick={handleForge}
-                  disabled={forgeState.directive.length < 20}
-                  className={cn('btn-gold px-8', forgeState.directive.length < 20 && 'opacity-30 cursor-not-allowed')}
-                >
-                  <span>⚒ Forge into Legend</span>
-                </button>
+<button
+  id="forge-submit"
+  onClick={handleForge}
+  disabled={forgeState.directive.length < 20}
+  className={cn('btn-gold px-8 flex items-center gap-2', forgeState.directive.length < 20 && 'opacity-30 cursor-not-allowed')}
+>
+  <Hammer size={14} />
+  <span>Forge into Legend</span>
+</button>
               </div>
             </motion.div>
           )}
@@ -436,10 +450,12 @@ export default function ForgePage() {
                       'border-stone/20 text-parch/20'
                     )}
                   >
-                    <span className="text-xl">{stage.icon}</span>
+                    <span className="text-xl">
+  <stage.Icon size={20} />
+</span>
                     <span className="font-cinzel text-xs tracking-widest uppercase">{stage.label}</span>
-                    {i < forgeProgress && <span className="ml-auto text-olivine">✓</span>}
-                    {i === forgeProgress && <span className="ml-auto text-sand">◌</span>}
+                    {i < forgeProgress && <span className="ml-auto text-olivine"><Check size={16} /></span>}
+                    {i === forgeProgress && <span className="ml-auto text-sand"><Circle size={16} /></span>}
                   </div>
                 ))}
               </div>
@@ -454,7 +470,9 @@ export default function ForgePage() {
               animate={{ opacity: 1, scale: 1 }}
               className="text-center py-12"
             >
-              <div className="text-6xl mb-6 animate-drift">✨</div>
+              <div className="mb-6 text-gold animate-drift">
+  <Sparkles size={48} />
+</div>
               <h2 className="font-cinzel-dec text-3xl text-gold mb-2">Apotheosis!</h2>
               <p className="font-fell italic text-parch/60 mb-2">
                 {forgeState.name}.pantheon.eth has awakened.
@@ -464,7 +482,12 @@ export default function ForgePage() {
               </p>
 
               <div className="stone-card p-6 max-w-sm mx-auto mb-8">
-                <div className="text-3xl mb-3">{ARCHETYPE_ICONS[forgeState.archetype ?? 'Strategist']}</div>
+                <div className="text-3xl mb-3">
+  {(() => {
+    const Icon = ARCHETYPE_ICONS[forgeState.archetype ?? 'Strategist']
+    return <Icon size={24} />
+  })()}
+</div>
                 <div className="font-cinzel text-lg text-sand mb-1">{forgeState.name}</div>
                 <div className="section-label text-[7px] text-parch/30 mb-3">{forgeState.name}.pantheon.eth</div>
                 <div className="flex justify-between text-xs font-cinzel">

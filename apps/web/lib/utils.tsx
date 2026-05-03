@@ -1,7 +1,8 @@
-// lib/utils.ts
+// lib/utils.tsx
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import type { Archetype, Rank } from './store'
+import { User, Eye, Zap, Heart, type LucideIcon } from 'lucide-react'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -51,12 +52,19 @@ export function winRate(wins: number, losses: number): number {
   return total === 0 ? 0 : Math.round((wins / total) * 100)
 }
 
-export const ARCHETYPE_ICONS: Record<Archetype, string> = {
-  Strategist: '⚔️',
-  Oracle:     '🔮',
-  Berserker:  '🔥',
-  Diplomat:   '🕊️',
+export function getArchetypeIcon(archetype: Archetype, size = 20) {
+  const icons: Record<Archetype, LucideIcon> = { Strategist: User, Oracle: Eye, Berserker: Zap, Diplomat: Heart };
+  const Icon = icons[archetype];
+  return <Icon size={size} />;
 }
+
+export const ARCHETYPE_ICONS: Record<Archetype, LucideIcon> = {
+  Strategist: User,
+  Oracle: Eye,
+  Berserker: Zap,
+  Diplomat: Heart,
+}
+
 
 export const ARCHETYPE_DESCRIPTIONS: Record<Archetype, string> = {
   Strategist: 'Cold logic. Calculates every move with perfect rationality.',

@@ -74,7 +74,7 @@
 
   /* ── Cards ── */
   .stone-card {
-    @apply bg-deep border border-stone/20 relative overflow-hidden transition-all duration-300;
+    @apply bg-deep border border-stone/20 relative overflow-hidden transition-all duration-500 ease-out;
     background: linear-gradient(135deg, rgba(14,8,24,0.95) 0%, rgba(20,14,36,0.9) 100%);
   }
   .stone-card::before {
@@ -83,11 +83,15 @@
     inset: 0;
     background: linear-gradient(135deg, rgba(201,168,76,0.025) 0%, transparent 60%);
     pointer-events: none;
+    transition: opacity 0.5s ease;
   }
   .stone-card:hover {
-    border-color: rgba(217,167,139,0.35);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(201,168,76,0.08);
+    border-color: rgba(217,167,139,0.5);
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 20px rgba(201,168,76,0.15);
+  }
+  .stone-card:hover::before {
+    opacity: 1.5;
   }
 
   /* Marble variant (lighter) */
@@ -116,7 +120,11 @@
     z-index: 0;
   }
   .btn-gold:hover::before { transform: scaleX(1); }
-  .btn-gold:hover { @apply text-nox; }
+  .btn-gold:hover { 
+    @apply text-nox;
+    transform: scale(1.02);
+    box-shadow: 0 0 20px rgba(201,168,76,0.3);
+  }
   .btn-gold > * { position: relative; z-index: 1; }
 
   .btn-ghost {

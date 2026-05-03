@@ -5,8 +5,8 @@ import { getDefaultConfig } from '@rainbow-me/rainbowkit'
 
 // 0G Testnet chain definition
 export const ogTestnet = {
-  id: 16600,
-  name: '0G Testnet',
+  id: 16601,
+  name: '0G Galileon Testnet',
   nativeCurrency: { name: '0G', symbol: 'OG', decimals: 18 },
   rpcUrls: {
     default: { http: ['https://evmrpc-testnet.0g.ai'] },
@@ -14,7 +14,7 @@ export const ogTestnet = {
   blockExplorers: {
     default: {
       name: '0G Explorer',
-      url: 'https://chainscan-newton.0g.ai',
+      url: 'https://chainscan-galileo.0g.ai',
     },
   },
   testnet: true,
@@ -31,10 +31,12 @@ export const localAnvil = {
   testnet: true,
 } as const
 
+const isProd = process.env.NODE_ENV === 'production'
+
 export const wagmiConfig = getDefaultConfig({
   appName: 'Pantheon',
   projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ?? 'pantheon-demo',
-  chains: [localAnvil, ogTestnet, mainnet, sepolia],
+  chains: isProd ? [ogTestnet, localAnvil, mainnet, sepolia] : [localAnvil, ogTestnet, mainnet, sepolia],
   transports: {
     [localAnvil.id]: http('http://127.0.0.1:8545'),
     [ogTestnet.id]: http(process.env.NEXT_PUBLIC_RPC_URL ?? 'https://evmrpc-testnet.0g.ai'),

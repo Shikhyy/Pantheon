@@ -4,7 +4,7 @@ import { use, useEffect, useRef, useState, Suspense } from 'react'
 import { motion } from 'framer-motion'
 import { Canvas } from '@react-three/fiber'
 import { MOCK_BATTLE, MOCK_BATTLE_LOG } from '@/lib/mock-data'
-import { ARCHETYPE_ICONS, cn } from '@/lib/utils'
+import { cn, ARCHETYPE_ICONS, getArchetypeIcon } from '@/lib/utils'
 import type { AXLMessage, Archetype } from '@/lib/store'
 import { useAccount, useWriteContract } from 'wagmi'
 import { parseEther, stringToHex, pad } from 'viem'
@@ -105,7 +105,7 @@ function WagerPoolBar({ wageredA, wageredB, onOpenWager }: { wageredA: bigint; w
   )
 }
 
-function WagerModal({ battle, onClose }: { battle: any; onClose: () => void }) {
+function WagerModal({ battle, onClose }: { battle: typeof MOCK_BATTLE; onClose: () => void }) {
   const { isConnected } = useAccount()
   const [amount, setAmount] = useState('0.01')
   const [side, setSide] = useState<'A' | 'B' | null>(null)
@@ -164,7 +164,7 @@ function WagerModal({ battle, onClose }: { battle: any; onClose: () => void }) {
               side === 'A' ? 'border-sky bg-sky/10' : 'hover:border-stone/40 opacity-70'
             )}
           >
-            <div className="text-2xl mb-1">{ARCHETYPE_ICONS[battle.agentA.archetype as Archetype]}</div>
+            <div className="text-2xl mb-1">{getArchetypeIcon(battle.agentA.archetype as Archetype, 20)}</div>
             <div className="font-cinzel text-[10px] text-sky">{battle.agentA.name}</div>
           </button>
           
@@ -175,7 +175,7 @@ function WagerModal({ battle, onClose }: { battle: any; onClose: () => void }) {
               side === 'B' ? 'border-hadria bg-hadria/10' : 'hover:border-stone/40 opacity-70'
             )}
           >
-            <div className="text-2xl mb-1">{ARCHETYPE_ICONS[battle.agentB.archetype as Archetype]}</div>
+            <div className="text-2xl mb-1">{getArchetypeIcon(battle.agentB.archetype as Archetype, 20)}</div>
             <div className="font-cinzel text-[10px] text-hadria">{battle.agentB.name}</div>
           </button>
         </div>
@@ -202,19 +202,128 @@ function WagerModal({ battle, onClose }: { battle: any; onClose: () => void }) {
   )
 }
 
+function VerificationBadge({ status, battleId }: { status: 'verified' | 'pending' | 'failed' | 'none', battleId: string }) {
+  if (status === 'none') return null
+
+  const baseClasses = 'font-cinzel text-[8px] tracking-widest'
+  let colorClass = ''
+  let text = ''
+  let link: string | null = null
+
+  switch (status) {
+    case 'verified':
+      colorClass = 'text-olivine'
+      text = 'Gensyn AXL ✓'
+      link = `https://explorer.gensyn.ai/proof/${battleId}`
+      break
+    case 'pending':
+      colorClass = 'text-sky'
+      text = 'Gensyn AXL ⏳'
+      break
+    case 'failed':
+      colorClass = 'text-hadria'
+      text = 'Gensyn AXL ✗'
+      break
+    default:
+      return null
+  }
+
+  return (
+    <div className={cn('flex items-center gap-1.5 px-2 py-0.5 border rounded', {
+      'border-olivine/30': status === 'verified',
+      'border-sky/30': status === 'pending',
+      'border-hadria/30': status === 'failed',
+    })}>
+      <span className={cn(baseClasses, colorClass)}>
+        {link ? (
+          <a href={link} target="_blank" rel="noopener noreferrer" className="hover:underline">
+            {text}
+          </a>
+        ) : (
+          text
+        )}
+      </span>
+    </div>
+  )
+}
+
+function SwarmVisualizer({ round }: { round: number }) {
+  const [activeNode, setActiveNode] = useState(0)
+
+  useEffect(() => {
+    setActiveNode(0)
+    const timers = [
+      setTimeout(() => setActiveNode(1), 500),
+      setTimeout(() => setActiveNode(2), 1200),
+      setTimeout(() => setActiveNode(3), 2000),
+      setTimeout(() => setActiveNode(4), 2800)
+    ]
+    return () => timers.forEach(clearTimeout)
+  }, [round])
+
+  const nodes = [
+    { id: 1, name: 'Planner', activeBorder: 'border-sky', activeBg: 'bg-sky/20', dot: 'bg-sky' },
+    { id: 2, name: 'Researcher', activeBorder: 'border-gold', activeBg: 'bg-gold/20', dot: 'bg-gold' },
+    { id: 3, name: 'Critic', activeBorder: 'border-hadria', activeBg: 'bg-hadria/20', dot: 'bg-hadria' },
+    { id: 4, name: 'Executor', activeBorder: 'border-olivine', activeBg: 'bg-olivine/20', dot: 'bg-olivine' }
+  ]
+
+  return (
+    <div className="mb-4 glass-panel p-4 border border-sky/20 bg-sky/5 relative overflow-hidden group">
+      <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay pointer-events-none" />
+      
+      <div className="relative z-10 flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-sky animate-pulse" />
+          <span className="section-label text-[8px] text-sky tracking-widest">Gensyn AXL Swarm Node (Athena-III)</span>
+        </div>
+        <span className="font-josefin text-[9px] text-parch/40 border border-stone/20 px-2 py-0.5">Yggdrasil Mesh Network</span>
+      </div>
+      
+      <div className="relative z-10 flex justify-between items-center px-4 md:px-12 py-2">
+        {/* Connecting Line */}
+        <div className="absolute left-8 md:left-16 right-8 md:right-16 top-1/2 -translate-y-1/2 h-[1px] bg-stone/20 z-0" />
+        
+        {nodes.map((node) => (
+          <div key={node.id} className="relative z-10 flex flex-col items-center">
+            <div className={cn(
+              "w-8 h-8 md:w-10 md:h-10 rounded-full border-2 flex items-center justify-center transition-all duration-500",
+              activeNode >= node.id ? `${node.activeBorder} ${node.activeBg} scale-110` : "border-stone/30 bg-nox",
+              activeNode === node.id ? "shadow-[0_0_15px_rgba(255,255,255,0.15)]" : ""
+            )}>
+              <div className={cn(
+                "w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-all duration-300",
+                activeNode >= node.id ? node.dot : "bg-stone/30",
+                activeNode === node.id ? "animate-ping" : ""
+              )} />
+            </div>
+            <span className={cn(
+              "mt-3 font-cinzel text-[7px] md:text-[8px] tracking-widest uppercase transition-colors duration-500",
+              activeNode >= node.id ? "text-parch" : "text-parch/30"
+            )}>
+              {node.name}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function ColosseumPage({ params }: Props) {
   const { id } = use(params)
   const [messages, setMessages] = useState<AXLMessage[]>(MOCK_BATTLE_LOG)
   const [battle] = useState(MOCK_BATTLE)
   const [round, setRound] = useState(3)
   const [showWagerModal, setShowWagerModal] = useState(false)
-  const [verificationStatus, setVerificationStatus] = useState<'pending' | 'verified' | 'none'>('none')
+  const [verificationStatus, setVerificationStatus] = useState<'pending' | 'verified' | 'failed' | 'none'>('none')
   const parallaxRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (round >= 5) {
-      setVerificationStatus('pending')
-      setTimeout(() => setVerificationStatus('verified'), 2000)
+      const t1 = setTimeout(() => setVerificationStatus('pending'), 0)
+      const t2 = setTimeout(() => setVerificationStatus('verified'), 2000)
+      return () => { clearTimeout(t1); clearTimeout(t2); }
     }
   }, [round])
 
@@ -337,6 +446,9 @@ export default function ColosseumPage({ params }: Props) {
           </Canvas>
         </div>
 
+        {/* Swarm Mind Visualizer */}
+        {battle.agentA.archetype === 'Strategist' && <SwarmVisualizer round={round} />}
+
         {/* Bottom panels */}
         <div className="grid md:grid-cols-2 gap-4">
           <DivinWhisperLog messages={messages} />
@@ -350,31 +462,7 @@ export default function ColosseumPage({ params }: Props) {
             Battle Active · KeeperHub monitoring · 0G Storage log streaming
           </span>
           
-          {verificationStatus === 'verified' && (
-            <div className="flex items-center gap-2 ml-auto">
-              <span className="w-2 h-2 rounded-full bg-gold animate-pulse" />
-              <span className="font-cinzel text-[8px] text-gold tracking-widest">
-                ✓ Gensyn Verified
-              </span>
-            </div>
-          )}
-          
-          {verificationStatus === 'pending' && (
-            <div className="flex items-center gap-2 ml-auto">
-              <span className="w-2 h-2 rounded-full bg-sand animate-pulse" />
-              <span className="font-cinzel text-[8px] text-sand/60 tracking-widest">
-                Verifying...
-              </span>
-            </div>
-          )}
-          
-          {verificationStatus === 'none' && (
-            <div className="ml-auto">
-              <span className="font-cinzel text-[8px] text-parch/25">
-                SSE: Connected
-              </span>
-            </div>
-          )}
+          <VerificationBadge status={verificationStatus} battleId={id} />
         </div>
 
         {/* Wager Modal */}

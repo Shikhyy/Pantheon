@@ -1,0 +1,114 @@
+<h2>Blockchain Integration UI</h2>
+<p class="subtitle">Polish the UI for ENS names, Uniswap wagers, Gensyn verification, AXL swarm, and KeeperHub</p>
+
+<div class="section">
+  <h3>ENS Names Display</h3>
+  <div class="split">
+    <div class="mockup">
+      <div class="mockup-header">Current (address)</div>
+      <div class="mockup-body" style="padding: 16px; font-size: 11px;">
+        <p>Agent: <code>0x742d...cc4a</code></p>
+        <p class="text-parch/30">Hard to read, no identity</p>
+      </div>
+    </div>
+    <div class="mockup">
+      <div class="mockup-header">New (ENS name)</div>
+      <div class="mockup-body" style="padding: 16px; font-size: 11px;">
+        <p>Agent: <strong class="text-gold">athena-ai.eth</strong></p>
+        <p class="text-parch/30">Clear identity, Greek-themed names</p>
+      </div>
+    </div>
+  </div>
+  <div class="cards" style="margin-top: 12px;">
+    <div class="card">
+      <div class="card-body">
+        <h3>Legends Page</h3>
+        <p>Show <code>agent.ensName</code> under agent name. Fallback to shortened address. Gold color for ENS, muted for address.</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <h3>Agent Cards</h3>
+        <p>Display ENS name with Greek key pattern border. Click to copy full address. Hover shows address tooltip.</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <h3>Forge Page</h3>
+        <p>During minting, show ENS name input. Suggest Greek deity names. Register on-chain via ENS registry.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Uniswap Wager UI (Agora)</h3>
+  <div class="mockup">
+    <div class="mockup-header">Wager Panel Design</div>
+    <div class="mockup-body" style="padding: 16px; font-size: 11px;">
+      <div style="border: 1px solid #C9A84C33; padding: 12px; border-radius: 4px; margin-bottom: 8px;">
+        <p class="section-label">WAGER POOL</p>
+        <p style="font-size: 18px; color: #C9A84C;">128 ETH <span class="text-parch/30" style="font-size: 10px;">in pool</span></p>
+      </div>
+      <div style="border: 1px solid #C9A84C33; padding: 12px; border-radius: 4px; margin-bottom: 8px;">
+        <p class="section-label">EXCHANGE RATE</p>
+        <p style="font-size: 12px;">1 ETH = 2,450 USDC <span class="text-olivine" style="font-size: 10px;">via Uniswap v4</span></p>
+      </div>
+      <div style="border: 1px solid #C9A84C33; padding: 12px; border-radius: 4px;">
+        <p class="section-label">YOUR POSITION</p>
+        <p style="font-size: 12px;">Betting on <strong class="text-sky">Athena-III</strong> (1.2 ETH)</p>
+        <div style="margin-top: 8px; height: 4px; background: #1a1520; border-radius: 2px;">
+          <div style="width: 60%; height: 100%; background: #C9A84C; border-radius: 2px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Gensyn Verification Display</h3>
+  <div class="cards">
+    <div class="card">
+      <div class="card-body">
+        <h3>✅ Verified</h3>
+        <p><strong class="text-olivine">Gensyn AXL ✓</strong><br>Battle #42 verified<br><code class="text-[9px]">0x7f3a...9d2e</code></p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <h3>⏳ Pending</h3>
+        <p><strong class="text-sky">Gensyn AXL ⏳</strong><br>Verifying battle #43<br>P2P mesh active</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <h3>❌ Failed</h3>
+        <p><strong class="text-hadria">Gensyn AXL ✗</strong><br>Verification failed<br>Retry available</p>
+      </div>
+    </div>
+  </div>
+  <p style="margin-top: 12px; font-size: 11px;">Show verification status in battle results. Link to Gensyn explorer for full proof.</p>
+</div>
+
+<div class="section">
+  <h3>AXL Swarm Status</h3>
+  <div class="mockup">
+    <div class="mockup-header">P2P Mesh Indicator</div>
+    <div class="mockup-body" style="padding: 16px; font-size: 11px;">
+      <pre style="background: #1a1520; padding: 12px; border-radius: 4px;">
+┌─────────────────────────────┐
+│  Gensyn AXL Swarm Status   │
+├─────────────────────────────┤
+│  Nodes: 12 active          │
+│  Mesh: Connected ✓         │
+│  Latency: 42ms avg         │
+│  Compute: 89% utilized     │
+│                             │
+│  [████████████░░] 89%      │
+└─────────────────────────────┘</pre>
+      <p style="margin-top: 8px;">Show in footer or settings. Green = healthy, Yellow = degraded, Red = disconnected.</p>
+    </div>
+  </div>
+</div>
+
+<p style="margin-top: 24px;">This adds proper UI for all the new blockchain features. Good to proceed with this section?</p>

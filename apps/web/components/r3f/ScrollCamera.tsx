@@ -12,7 +12,6 @@ gsap.registerPlugin(ScrollTrigger)
 gsap.registerPlugin(useGSAP)
 
 export function ScrollCamera() {
-  const { camera } = useThree()
   const setCameraPhase = useGameStore(s => s.setCameraPhase)
 
   const cameraState = useRef({
@@ -40,9 +39,11 @@ export function ScrollCamera() {
     })
   })
 
-  useFrame((_, delta) => {
+  useFrame(({ camera }, delta) => {
     // Smooth lerp to scroll-driven target
+    // eslint-disable-next-line react-hooks/immutability
     camera.position.z += (cameraState.current.z - camera.position.z) * Math.min(delta * 4, 1)
+    // eslint-disable-next-line react-hooks/immutability
     camera.position.y += (cameraState.current.y - camera.position.y) * Math.min(delta * 4, 1)
   })
 

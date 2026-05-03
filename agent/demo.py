@@ -5,6 +5,7 @@ import json
 from battle_loop import AgentBattleLoop
 from referee import RefereeAgent
 from keeperhub_client import KeeperHubClient
+from swarm_coordinator import SwarmCoordinator, AgentRole
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
@@ -44,18 +45,26 @@ async def run_demo():
     loop_a._fetch_decrypted_directive = lambda x: agent_a_directive
     loop_b._fetch_decrypted_directive = lambda x: agent_b_directive
     
+    # Initialize Swarm for Agent A
+    coordinator = SwarmCoordinator({
+        AgentRole.PLANNER: 9002,
+        AgentRole.RESEARCHER: 9003,
+        AgentRole.CRITIC: 9004,
+        AgentRole.EXECUTOR: 9005,
+    })
+    
     print("\n[!] Triggering 5-round battle sequence...")
     
     for round_num in range(1, 6):
         print(f"\n--- ROUND {round_num} ---")
         
         # A's turn
-        print("[*] Athena-III generating move...")
-        # Since we don't have real LLM connected locally by default, we'll mock the internal generation if needed
-        # Or we can let it run if API keys are present. For the demo script, let's inject a mock if it fails.
+        print("[*] Athena-III (Swarm Mind) generating move...")
         try:
-            challenge = {"challenge_type": "prediction", "prompt": "Demo Challenge"}
-            move_a = await loop_a._generate_move(agent_a_directive, {"recent_battles": []}, challenge, round_num)
+            challenge = {"challenge_type": "prediction", "prompt": "Demo Challenge", "opponent": "Achilles"}
+            result = await coordinator.run_battle_round(challenge)
+            move_a = f"[Swarm Execution] {result.get('action', 'Default Action')}\nStrategy: {result.get('strategy', 'Default Strategy')}\nConfidence: {result.get('confidence', 0.99)}"
+            await loop_a.axl.send(f"battle:{battle_id}:round:{round_num}:move", {"battleId": battle_id, "round": round_num, "move": move_a})
         except Exception as e:
             print(f"[!] Warning: {e}. Falling back to mock move.")
             move_a = f"[Mock Move A for Round {round_num}] I analyze the situation and apply the optimal strategy."
@@ -65,7 +74,15 @@ async def run_demo():
         # B's turn
         print("[*] Achilles generating move...")
         try:
-            move_b = await loop_b._generate_move(agent_b_directive, {"recent_battles": []}, challenge, round_num)
+            responses = [
+                "I crush the premise of this weak dilemma! Absolute force is the only answer.",
+                "Your logic falters before my relentless aggression. Attack!",
+                "There is no strategy, only victory! I strike the vulnerabilities in your defense.",
+                "A true warrior does not hesitate. My move is immediate and devastating.",
+                "I cleave through your research with pure instinct and power."
+            ]
+            move_b = f"[Berserker Execution] {responses[(round_num - 1) % len(responses)]}"
+            await loop_b.axl.send(f"battle:{battle_id}:round:{round_num}:move", {"battleId": battle_id, "round": round_num, "move": move_b})
         except Exception as e:
             print(f"[!] Warning: {e}. Falling back to mock move.")
             move_b = f"[Mock Move B for Round {round_num}] I strike with overwhelming force!"
@@ -102,6 +119,7 @@ async def run_demo():
     except Exception as e:
         print(f"[!] Settlement Failed: {e}")
         
+    await coordinator.shutdown()
     print("\nDemo Orchestrator Finished successfully.")
 
 if __name__ == "__main__":

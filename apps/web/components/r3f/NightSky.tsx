@@ -1,7 +1,7 @@
 // components/r3f/NightSky.tsx
 'use client'
 
-import { useRef, useMemo } from 'react'
+import { useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { BufferGeometry, BufferAttribute, ShaderMaterial, AdditiveBlending } from 'three'
 
@@ -33,7 +33,7 @@ const starFragmentShader = /* glsl */`
 export function NightSky({ starCount = 2000 }: { starCount?: number }) {
   const matRef = useRef<ShaderMaterial>(null)
 
-  const { geometry, material } = useMemo(() => {
+  const [{ geometry, material }] = useState(() => {
     const positions = new Float32Array(starCount * 3)
     const offsets   = new Float32Array(starCount)
     const sizes     = new Float32Array(starCount)
@@ -61,7 +61,7 @@ export function NightSky({ starCount = 2000 }: { starCount?: number }) {
     })
 
     return { geometry: geo, material: mat }
-  }, [starCount])
+  })
 
   useFrame(({ clock }) => {
     if (matRef.current) {
