@@ -104,7 +104,9 @@ export default function DashboardPage() {
           <p className="font-fell italic text-parch/40 text-sm mb-10 leading-relaxed">
             "Only those who hold the keys to the digital vault may enter the sanctum of the gods."
           </p>
-          <ConnectButton />
+          <div className="flex justify-center scale-110">
+            <ConnectButton />
+          </div>
         </div>
       </div>
     )

@@ -74,16 +74,19 @@ export default function LandingPage() {
       { opacity: 1, y: 0, duration: 1.2, ease: 'power3.out' }
     )
 
-    // Fade out CTAs and scroll indicator on scroll
+    // Initially hide CTAs
+    gsap.set('.hero-cta', { opacity: 0, y: 20 })
+
+    // Reveal CTAs only after small scroll
     gsap.to('.hero-cta', {
-      opacity: 0,
-      y: -20,
-      ease: 'power1.inOut',
+      opacity: 1,
+      y: 0,
+      duration: 0.8,
+      ease: 'power2.out',
       scrollTrigger: {
         trigger: '.hero-content',
-        start: 'top top',
-        end: 'bottom center',
-        scrub: true,
+        start: '100px top', // Start after 100px scroll
+        toggleActions: 'play none none reverse',
       },
     })
 
@@ -153,7 +156,7 @@ export default function LandingPage() {
           </div>
 
           {/* Scroll indicator */}
-          <div className="mt-16 flex flex-col items-center gap-2 text-parch/20 animate-drift reveal-section hero-cta">
+          <div className="mt-16 flex flex-col items-center gap-2 text-parch/20 animate-drift reveal-section">
             <span className="section-label text-[7px]">Scroll to descend</span>
             <svg width="12" height="20" viewBox="0 0 12 20" fill="none">
               <path d="M6 0v16M1 11l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>

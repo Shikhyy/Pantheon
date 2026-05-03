@@ -6,9 +6,9 @@ import * as THREE from 'three'
 
 export function HallOfGods({ isActive = false }: { isActive?: boolean }) {
   const darkStoneMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: '#2b2131',
-    roughness: 0.7,
-    metalness: 0.2,
+    color: '#4b3b51',
+    roughness: 0.5,
+    metalness: 0.5,
   }), [])
 
   const radius = 22;
@@ -66,8 +66,8 @@ export function HallOfGods({ isActive = false }: { isActive?: boolean }) {
         ]}
       />
 
-      <pointLight position={[0, 20, -20]} intensity={7} color="#d4af37" distance={70} />
-      <ambientLight intensity={0.15} />
+      <pointLight position={[0, 20, -20]} intensity={15} color="#d4af37" distance={70} />
+      <ambientLight intensity={0.5} />
     </group>
   )
 }

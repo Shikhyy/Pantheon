@@ -36,32 +36,34 @@ export default function LegendsPage() {
 
         {/* ── CINEMATIC HEADER ── */}
         <div className="text-center mb-32 relative">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.02] pointer-events-none">
-            <Trophy size={400} />
-          </div>
-          
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
           >
-            <div className="section-label mb-6 tracking-[0.6em] text-gold/50">ETERNAL CHRONICLE</div>
-            <h1 className="font-cinzel text-5xl md:text-6xl text-parch mb-8 tracking-tighter">HALL OF LEGENDS</h1>
+            <div className="section-label mb-8 tracking-[0.8em] text-gold/40">ETERNAL CHRONICLE</div>
             
-            <div className="flex flex-wrap items-center justify-center gap-12 text-gold/40">
-              <div className="flex items-center gap-3">
-                <Shield size={14} />
-                <span className="font-cinzel text-[10px] tracking-[0.2em] uppercase">Akashic Ledger Verified</span>
+            <div className="relative inline-block mb-12">
+              <h1 className="font-cinzel text-5xl md:text-7xl text-parch tracking-[-0.02em] relative z-10">
+                HALL OF LEGENDS
+              </h1>
+              <div className="absolute -inset-x-20 -inset-y-10 bg-gold/5 blur-[100px] pointer-events-none rounded-full" />
+            </div>
+            
+            <div className="flex flex-wrap items-center justify-center gap-12 text-gold/30">
+              <div className="flex items-center gap-3 group cursor-default">
+                <Shield size={14} className="group-hover:text-gold transition-colors" />
+                <span className="font-cinzel text-[9px] tracking-[0.3em] uppercase group-hover:text-parch/60 transition-colors">Akashic Ledger Verified</span>
               </div>
-              <div className="h-4 w-px bg-gold/20" />
-              <div className="flex items-center gap-3">
-                <Zap size={14} />
-                <span className="font-cinzel text-[10px] tracking-[0.2em] uppercase">Season I: Apotheosis</span>
+              <div className="h-4 w-px bg-gold/10" />
+              <div className="flex items-center gap-3 group cursor-default">
+                <Zap size={14} className="group-hover:text-gold transition-colors" />
+                <span className="font-cinzel text-[9px] tracking-[0.3em] uppercase group-hover:text-parch/60 transition-colors">Season I: Apotheosis</span>
               </div>
-              <div className="h-4 w-px bg-gold/20" />
-              <div className="flex items-center gap-3 text-olivine">
-                <Star size={14} />
-                <span className="font-cinzel text-[10px] tracking-[0.2em] uppercase">{daysLeft} Days Remaining</span>
+              <div className="h-4 w-px bg-gold/10" />
+              <div className="flex items-center gap-3 text-olivine group cursor-default">
+                <Star size={14} className="animate-pulse" />
+                <span className="font-cinzel text-[9px] tracking-[0.3em] uppercase group-hover:text-olivine/80 transition-colors">{daysLeft} Days Remaining</span>
               </div>
             </div>
           </motion.div>
@@ -84,35 +86,51 @@ export default function LegendsPage() {
                 className={cn("relative", order)}
               >
                 <div className={cn(
-                  "stone-card transition-all duration-700 overflow-hidden",
-                  isFirst ? "p-1 bg-gold/20 border-gold/40 scale-110 -translate-y-12 shadow-[0_20px_60px_rgba(201,168,76,0.15)]" : "p-0.5 border-gold/10"
+                  "stone-card transition-all duration-700 overflow-hidden relative group",
+                  isFirst ? "p-[1px] bg-gradient-to-b from-gold/40 via-gold/10 to-transparent border-none scale-110 -translate-y-12 shadow-[0_40px_100px_rgba(201,168,76,0.1)]" : "p-[1px] bg-white/5 border-none"
                 )}>
-                  <div className="bg-deep/80 p-10 flex flex-col items-center">
-                    <div className={cn("mb-8 p-4 border border-gold/20 rounded-full", isFirst ? "text-gold" : "text-parch/40")}>
-                      {isFirst ? <Trophy size={48} /> : <Medal size={32} />}
+                  {/* Decorative corner accents for first place */}
+                  {isFirst && (
+                    <>
+                      <div className="absolute top-0 left-0 w-8 h-8 border-l border-t border-gold/40 z-20" />
+                      <div className="absolute top-0 right-0 w-8 h-8 border-r border-t border-gold/40 z-20" />
+                    </>
+                  )}
+                  
+                  <div className="bg-deep/90 backdrop-blur-3xl p-10 flex flex-col items-center relative z-10">
+                    <div className={cn(
+                      "mb-8 p-5 border rounded-full transition-transform duration-500 group-hover:scale-110",
+                      isFirst ? "text-gold border-gold/20 bg-gold/5" : "text-parch/30 border-parch/10"
+                    )}>
+                      {isFirst ? <Trophy size={42} /> : <Medal size={28} />}
                     </div>
                     
-                    <div className="section-label text-[10px] tracking-[0.4em] mb-3 text-gold/60">{rankTitle}</div>
-                    <h3 className="font-cinzel-dec text-2xl text-parch mb-2 tracking-widest">{agent.name}</h3>
-                    <div className="section-label text-[10px] text-parch/30 mb-8">{agent.ensName}</div>
+                    <div className="section-label text-[9px] tracking-[0.5em] mb-4 text-gold/40">{rankTitle}</div>
+                    <h3 className="font-cinzel text-2xl text-parch mb-2 tracking-widest">{agent.name}</h3>
+                    <div className="section-label text-[10px] text-parch/20 mb-8">{agent.ensName}</div>
                     
-                    <div className="w-full h-px bg-gold/10 mb-8" />
+                    <div className="w-full h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent mb-8" />
                     
-                    <div className="grid grid-cols-2 gap-10 w-full mb-8">
+                    <div className="grid grid-cols-2 gap-10 w-full mb-10">
                       <div className="text-center">
-                        <div className="font-cinzel text-3xl text-gold mb-1">{agent.elo}</div>
-                        <div className="section-label text-[8px]">ELO RATING</div>
+                        <div className="font-cinzel text-3xl text-gold/90 mb-1">{agent.elo}</div>
+                        <div className="section-label text-[8px] text-parch/30">ELO RATING</div>
                       </div>
                       <div className="text-center">
-                        <div className="font-cinzel text-3xl text-olivine mb-1">{winRate(agent.wins, agent.losses)}%</div>
-                        <div className="section-label text-[8px]">WIN RATE</div>
+                        <div className="font-cinzel text-3xl text-olivine/80 mb-1">{winRate(agent.wins, agent.losses)}%</div>
+                        <div className="section-label text-[8px] text-parch/30">WIN RATE</div>
                       </div>
                     </div>
-
+                    
                     <Link href={`/agora`} className={cn(
-                      "btn-gold w-full py-3 text-xs",
-                      isFirst ? "bg-gold text-nox" : ""
-                    )}>CHALLENGE GOD</Link>
+                      "w-full py-4 text-[9px] font-cinzel tracking-[0.3em] uppercase transition-all duration-300 flex items-center justify-center gap-2",
+                      isFirst 
+                        ? "bg-gold text-nox hover:bg-parch hover:text-nox" 
+                        : "border border-gold/20 text-gold/60 hover:bg-gold/10 hover:text-gold"
+                    )}>
+                      <Zap size={10} />
+                      CHALLENGE GOD
+                    </Link>
                   </div>
                 </div>
               </motion.div>

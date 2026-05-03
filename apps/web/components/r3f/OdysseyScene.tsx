@@ -33,22 +33,22 @@ function SceneContent() {
 
       {/* ── DYNAMIC LIGHTING PER SECTION ── */}
       <ambientLight 
-        intensity={activeSection === 'forge' || activeSection === 'battle' ? 0.4 : 0.8} 
-        color={activeSection === 'forge' ? "#301010" : "#1A1020"} 
+        intensity={activeSection === 'forge' || activeSection === 'battle' ? 0.8 : 1.2} 
+        color={activeSection === 'forge' ? "#402020" : "#2A1A30"} 
       />
       
       <directionalLight
         position={[0, 10, 5]}
-        intensity={activeSection === 'forge' ? 2.5 : 1.5}
-        color={activeSection === 'agora' ? "#5FB6D9" : "#8B6A4A"}
+        intensity={activeSection === 'forge' ? 4.5 : 3.5}
+        color={activeSection === 'agora' ? "#7FC6E9" : "#BBA580"}
       />
       
       {/* Central glow for architecture */}
       <pointLight 
-        position={[0, 5, -8]} 
-        intensity={activeSection === 'landing' ? 4 : 3.0} 
+        position={[0, 8, -8]} 
+        intensity={activeSection === 'landing' ? 12 : 8.0} 
         color={activeSection === 'agora' ? "#5FB6D9" : activeSection === 'forge' ? "#FF4400" : "#D4AF37"} 
-        distance={30} 
+        distance={40} 
       />
 
       {/* ── SECTION SPECIFIC ATMOSPHERE ── */}
@@ -147,12 +147,12 @@ function SceneContent() {
 
       <EffectComposer multisampling={4}>
         <Bloom
-          intensity={0.6}
+          intensity={1.2}
           mipmapBlur
-          luminanceThreshold={0.2}
-          luminanceSmoothing={0.6}
+          luminanceThreshold={0.15}
+          luminanceSmoothing={0.8}
         />
-        <Vignette eskil={false} offset={0.1} darkness={0.9} />
+        <Vignette eskil={false} offset={0.1} darkness={0.8} />
       </EffectComposer>
     </>
   )

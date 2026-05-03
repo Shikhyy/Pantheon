@@ -9,9 +9,9 @@ export function HephaestusForge({ isActive = false }: { isActive?: boolean }) {
   const anvilRef = useRef<THREE.Group>(null)
 
   const darkStoneMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: '#1A0D0D',
-    roughness: 1.0,
-    metalness: 0.0,
+    color: '#2A1D1D',
+    roughness: 0.8,
+    metalness: 0.3,
   }), [])
 
   const lavaMat = useMemo(() => new THREE.MeshStandardMaterial({
@@ -62,12 +62,12 @@ export function HephaestusForge({ isActive = false }: { isActive?: boolean }) {
           <mesh position={[0, 2.5, 0]} material={lavaMat}>
             <boxGeometry args={[4.5, 0.3, 3]} />
           </mesh>
-          <pointLight position={[0, 3, 0]} intensity={8} color="#ff4400" distance={25} />
+          <pointLight position={[0, 3, 0]} intensity={20} color="#ff4400" distance={35} />
         </group>
       </Float>
 
       <Sparkles count={150} scale={30} size={4} speed={1.2} color="#ff6600" />
-      <ambientLight intensity={0.1} />
+      <ambientLight intensity={0.5} />
     </group>
   )
 }

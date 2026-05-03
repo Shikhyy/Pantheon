@@ -99,7 +99,9 @@ export default function BreedingForgePage() {
           <p className="font-josefin text-parch/40 text-sm mb-8">
             Combine the essence of Gods to forge a new legacy.
           </p>
-          <ConnectButton />
+          <div className="flex justify-center scale-110">
+            <ConnectButton />
+          </div>
         </div>
       </div>
     )

@@ -6,9 +6,9 @@ import * as THREE from 'three'
 
 export function TempleOfZeus({ isActive = false }: { isActive?: boolean }) {
   const darkStoneMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: '#1a151f',
-    roughness: 0.4,
-    metalness: 0.6,
+    color: '#2a222f',
+    roughness: 0.3,
+    metalness: 0.8,
   }), [])
 
   const polishedFloorMat = useMemo(() => new THREE.MeshStandardMaterial({
@@ -66,10 +66,10 @@ export function TempleOfZeus({ isActive = false }: { isActive?: boolean }) {
       />
 
       {/* Atmospheric Braziers / Divine Lighting */}
-      <pointLight position={[-10, 4, -20]} intensity={8} color="#ff8800" distance={35} />
-      <pointLight position={[10, 4, -20]} intensity={8} color="#ff8800" distance={35} />
-      <pointLight position={[0, 25, -15]} intensity={5} color="#d4af37" distance={60} />
-      <ambientLight intensity={0.1} />
+      <pointLight position={[-10, 4, -20]} intensity={15} color="#ff8800" distance={35} />
+      <pointLight position={[10, 4, -20]} intensity={15} color="#ff8800" distance={35} />
+      <pointLight position={[0, 25, -15]} intensity={12} color="#d4af37" distance={60} />
+      <ambientLight intensity={0.4} />
     </group>
   )
 }

@@ -6,9 +6,9 @@ import * as THREE from 'three'
 
 export function MarketArchway({ isActive = false }: { isActive?: boolean }) {
   const darkStoneMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: '#3A2B40',
-    roughness: 0.6,
-    metalness: 0.1,
+    color: '#4A3B50',
+    roughness: 0.4,
+    metalness: 0.6,
   }), [])
 
   const stallMat = useMemo(() => new THREE.MeshStandardMaterial({
@@ -63,7 +63,7 @@ export function MarketArchway({ isActive = false }: { isActive?: boolean }) {
         <RuinedColumn position={[15, 0, 11]} rotation={[0, -0.4, 1.4]} scale={0.7} />
       </group>
 
-      <pointLight position={[0, 10, -5]} intensity={3} color="#5FB6D9" distance={40} />
+      <pointLight position={[0, 10, -5]} intensity={12} color="#5FB6D9" distance={50} />
     </group>
   )
 }
