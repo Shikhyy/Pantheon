@@ -50,6 +50,7 @@ function mockSSEResponse(battleId: string): Response {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(msg)}\n\n`))
         } else {
           clearInterval(interval)
+          controller.close()
         }
       }, 2000)
     },

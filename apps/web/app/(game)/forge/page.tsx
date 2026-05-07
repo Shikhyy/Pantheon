@@ -4,10 +4,11 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore, type Archetype } from '@/lib/store'
 import { ARCHETYPE_DESCRIPTIONS, ARCHETYPE_ICONS, cn } from '@/lib/utils'
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
-import { parseEther, keccak256, toBytes } from 'viem'
+import { useAccount, usePublicClient, useWriteContract } from 'wagmi'
+import { parseEther, keccak256, toBytes, parseEventLogs } from 'viem'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { playSound } from '@/components/audio/SoundEffects'
+import TEEStatus from '@/components/TEEStatus'
 import { toast } from 'sonner'
 import { PANTHEON_AGENT_ABI, CONTRACT_ADDRESSES } from '@/lib/contracts'
 import { Hammer, Lock, Cloud, Diamond, Link, Sparkles, Check, X, Circle } from 'lucide-react'
@@ -59,6 +60,7 @@ const FORGE_STAGES = [
 
 export default function ForgePage() {
   const { isConnected } = useAccount()
+  const publicClient = usePublicClient()
   const { writeContractAsync: writeContractAction } = useWriteContract()
   const { forgeState, updateForge, resetForge } = useGameStore()
   const [step, setStep] = useState(0) // 0=archetype, 1=name, 2=directive, 3=forging
@@ -72,10 +74,17 @@ export default function ForgePage() {
 
   const checkEnsName = async (name: string) => {
     updateForge({ name, nameStatus: 'checking' })
-    // Mock check — in production calls /api/ens/check
-    await new Promise(r => setTimeout(r, 600))
-    const taken = ['zeus', 'athena', 'apollo'].includes(name.toLowerCase())
-    updateForge({ nameStatus: taken ? 'taken' : 'available' })
+    try {
+      const response = await fetch(`/api/ens/check?name=${encodeURIComponent(name)}`)
+      const result = await response.json()
+      updateForge({
+        name: result.ensName ? result.ensName.replace('.pantheon.eth', '') : name,
+        nameStatus: result.available ? 'available' : 'taken',
+      })
+    } catch {
+      const taken = ['zeus', 'athena', 'apollo'].includes(name.toLowerCase())
+      updateForge({ nameStatus: taken ? 'taken' : 'available' })
+    }
   }
 
   const handleForge = async () => {
@@ -125,14 +134,21 @@ export default function ForgePage() {
       
       // Stage 3: Registering ENS
       setForgeProgress(3)
-      // We wait a bit for the mint to be indexed/processed by the network nodes
-      await new Promise(r => setTimeout(r, 2000))
-      
-      // In a real scenario, we'd fetch the tokenId from the receipt. 
-      // For now, we use the name since registerSubname in PantheonSubnames.sol supports it if we use the correct mapping.
-      // However, our contract registerSubname takes (name, tokenId). 
-      // We'll mock the tokenId as 0 for the call if we don't have it, but ideally we'd get it from the event.
-      // Since we want it to "actually work", let's assume the user will sign the second tx.
+            if (!publicClient) {
+              throw new Error('Public client unavailable for mint confirmation.')
+            }
+
+            const receipt = await publicClient.waitForTransactionReceipt({ hash: mintTx })
+            const mintedEvents = parseEventLogs({
+              abi: PANTHEON_AGENT_ABI,
+              eventName: 'AgentMinted',
+              logs: receipt.logs,
+            })
+            const tokenId = mintedEvents[0]?.args?.tokenId
+
+            if (!tokenId) {
+              throw new Error('Could not resolve minted tokenId from receipt.')
+            }
       
       try {
         await writeContractAction({
@@ -150,7 +166,7 @@ export default function ForgePage() {
             }
           ],
           functionName: 'registerSubname',
-          args: [forgeState.name, 0n],
+            args: [forgeState.name, tokenId],
           gas: 300_000n,
         })
       } catch (ensErr) {
@@ -159,7 +175,7 @@ export default function ForgePage() {
       
       // Stage 4: Awakening
       setForgeProgress(4)
-      await new Promise(r => setTimeout(r, 1000))
+      await new Promise(r => setTimeout(r, 600))
       
       setForgedSuccess(true)
       playSound('apotheosis')
@@ -227,6 +243,12 @@ export default function ForgePage() {
           <p className="font-fell italic text-parch/50">
             Three steps stand between you and immortality.
           </p>
+        </div>
+
+        <div className="mb-8 flex justify-center">
+          <div className="w-full max-w-md">
+            <TEEStatus />
+          </div>
         </div>
 
         {/* Step indicator */}

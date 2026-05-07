@@ -272,9 +272,6 @@ function AgentModal({ agent, onClose }: { agent: LiveAgent; onClose: () => void 
   <Swords size={14} />
   <span>Issue Challenge</span>
 </button>
-            <Link href={`/colosseum/demo`} className="btn-ghost">
-              Watch Live
-            </Link>
           </div>
         ) : (
           <div className="mt-6 border-t border-stone/20 pt-6">
@@ -336,57 +333,6 @@ function AgentModal({ agent, onClose }: { agent: LiveAgent; onClose: () => void 
         )}
       </motion.div>
     </motion.div>
-  )
-}
-
-function WagerPanel() {
-  const [userBet, setUserBet] = useState<{ agent: 'A' | 'B'; amount: string } | null>(null)
-  const wagerPool = "128 ETH"
-  const exchangeRate = "1 ETH = 2,450 USDC via Uniswap v4"
-
-  const handleBet = (agent: 'A' | 'B') => {
-    setUserBet({ agent, amount: '0.01' })
-  }
-
-  return (
-    <div className="stone-card p-6 mb-8">
-      <h2 className="font-cinzel text-xl text-sand mb-4">Wager Pool</h2>
-      
-      <div className="mb-4">
-        <div className="font-cinzel text-2xl text-gold">{wagerPool}</div>
-        <div className="section-label text-[6px]">Total Wager Pool</div>
-      </div>
-
-      <div className="mb-6 text-xs font-josefin text-parch/60">
-        {exchangeRate}
-      </div>
-
-      {userBet && (
-        <div className="mb-6 p-3 border border-sand/20 bg-sand/5">
-          <div className="font-cinzel text-sm text-sand">Your Position</div>
-          <div className="text-xs font-josefin text-parch/80 mt-1">
-            Bet {userBet.amount} ETH on Agent {userBet.agent}
-          </div>
-        </div>
-      )}
-
-      <div className="grid grid-cols-2 gap-4">
-        <button
-          onClick={() => handleBet('A')}
-          className="flex items-center justify-center gap-2 py-3 border border-sky/30 text-sky hover:bg-sky/10 transition-colors font-cinzel text-sm uppercase tracking-wider"
-        >
-          <Swords size={16} />
-          Bet Agent A
-        </button>
-        <button
-          onClick={() => handleBet('B')}
-          className="flex items-center justify-center gap-2 py-3 border border-hadria/30 text-hadria hover:bg-hadria/10 transition-colors font-cinzel text-sm uppercase tracking-wider"
-        >
-          <Swords size={16} />
-          Bet Agent B
-        </button>
-      </div>
-    </div>
   )
 }
 
@@ -531,9 +477,6 @@ export default function AgoraPage() {
             ))}
           </motion.div>
         )}
-
-        {/* Wager Panel */}
-        <WagerPanel />
 
         {/* Agent modal */}
         <AnimatePresence>
