@@ -14,6 +14,13 @@ const nextConfig: NextConfig = {
 
   // Turbopack config (Next.js 16 default)
   turbopack: {},
+
+  // Ensure logo is handled correctly
+  images: {
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+  },
 }
 
 export default nextConfig

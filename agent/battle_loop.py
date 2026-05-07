@@ -1,11 +1,15 @@
 # agent/battle_loop.py
 import asyncio
 import time
+import logging
+import httpx
 from models import AgentProfile, BattleConfig, AgentMove
 from og_client import ZeroGClient
 from axl_client import AXLClient
 from crypto import decrypt_directive
 from config import settings
+
+logger = logging.getLogger(__name__)
 
 try:
     from gensyn_client import GensynClient
@@ -29,13 +33,27 @@ class AgentBattleLoop:
         self.battle_id = config.battle_id
         self.opponent  = config.agent_b if is_agent_a else config.agent_a
 
+    async def _emit_sse(self, event_type: str, data: dict):
+        """Forward event to Next.js via SSE bridge."""
+        try:
+            async with httpx.AsyncClient() as client:
+                await client.post(
+                    f"{settings.SSE_URL}/battle/{self.battle_id}/emit",
+                    json={"type": event_type, "data": data, "battle_id": self.battle_id},
+                    timeout=2.0
+                )
+        except Exception as e:
+            logger.debug(f"SSE emission failed: {e}")
+
     async def run(self) -> None:
         """Main battle loop. Runs for 5 rounds."""
+
+        logger.info(f"[BATTLE] Starting battle loop for agent {self.agent.token_id}, battle_id={self.battle_id}")
 
         # 1. Wait for AXL node to be ready
         ready = await self.axl.wait_for_ready(timeout=30)
         if not ready:
-            print(f"AXL node {self.axl.base_url} not ready. Using mock mode.")
+            logger.warning(f"[BATTLE] AXL node {self.axl.base_url} not ready. Using mock mode.")
 
         # 2. Load agent memory (episodic + opponent model)
         memory = await self._load_memory()
@@ -76,6 +94,15 @@ class AgentBattleLoop:
                 topic=f"battle:{self.battle_id}:round:{round_num}:move",
                 payload=move.model_dump()
             )
+            
+            await self._emit_sse("axl_message", {
+                "id": f"agent-{self.agent.token_id}-move-{round_num}",
+                "from": self.agent.name,
+                "type": "MOVE",
+                "content": move.answer,
+                "timestamp": move.timestamp * 1000,
+                "nodeColor": "sky" if self.is_a else "hadria"
+            })
 
             # Wait for round score from referee
             score = await self.axl.recv(
@@ -92,6 +119,7 @@ class AgentBattleLoop:
 
         # 6. Archive battle transcript to 0G Log
         try:
+            logger.info(f"[BATTLE] Archiving battle transcript to 0G storage")
             await self.og.log_append(
                 namespace=f"agents/{self.agent.token_id}/battles",
                 entry={
@@ -101,17 +129,44 @@ class AgentBattleLoop:
                     "timestamp": time.time(),
                 }
             )
+            logger.info(f"[BATTLE] Transcript archived successfully")
         except Exception as e:
-            print(f"Failed to save log to 0G: {e}")
+            logger.error(f"[BATTLE] Failed to save log to 0G: {e}", exc_info=True)
 
-        # 7. Verify battle result with Gensyn (if available)
+        # 7. Submit the battle transcript for Gensyn verification and persist the proof
         if GENSYN_AVAILABLE:
             try:
+                logger.info(f"[BATTLE] Submitting battle {self.battle_id} to Gensyn for verification")
                 gensyn = GensynClient()
-                verification = await gensyn.wait_for_proof(f"battle_{self.battle_id}")
-                print(f"Battle {self.battle_id} verified: {verification.get('verified', False)}")
+                agents = [
+                    {
+                        "agent_token_id": self.agent.token_id,
+                        "archetype": self.agent.archetype,
+                        "is_primary": self.is_a,
+                    },
+                    {
+                        "agent_token_id": self.opponent.token_id,
+                        "archetype": self.opponent.archetype,
+                        "is_primary": not self.is_a,
+                    },
+                ]
+                battle_inputs = {
+                    "battle_id": self.battle_id,
+                    "rounds": self.config.total_rounds,
+                    "transcript": memory,
+                    "winner_candidate": self.agent.token_id,
+                }
+                submission = await gensyn.submit_battle_computation(battle_inputs, agents)
+                compute_id = submission.get("compute_id") or submission.get("id")
+                if compute_id:
+                    logger.info(f"[BATTLE] Gensyn computation submitted: compute_id={compute_id}")
+                    proof = await gensyn.wait_for_proof(compute_id)
+                    await gensyn.store_verified_proof(self.battle_id, proof)
+                    logger.info(f"[BATTLE] Battle {self.battle_id} proof stored: {compute_id}")
+                else:
+                    logger.warning(f"[BATTLE] Gensyn submission response missing compute_id: {submission}")
             except Exception as e:
-                print(f"Gensyn verification skipped: {e}")
+                logger.error(f"[BATTLE] Gensyn verification failed: {e}", exc_info=True)
 
     async def _generate_move(
         self,

@@ -1,8 +1,12 @@
 # agent/keeperhub_client.py
 import httpx
 import asyncio
+import logging
 from typing import Any
 from config import settings
+from web3 import Web3
+
+logger = logging.getLogger(__name__)
 
 try:
     from eth_abi import encode as eth_encode
@@ -40,10 +44,15 @@ class KeeperHubClient:
     def __init__(self):
         self.mcp_url  = settings.KEEPERHUB_MCP_URL
         self.api_key  = settings.KEEPERHUB_API_KEY
+        self.mock_mode = not bool(self.api_key)
         self.headers  = {
-            "Authorization": f"Bearer {self.api_key}",
+            "Authorization": f"Bearer {self.api_key}" if self.api_key else "",
             "Content-Type": "application/json",
         }
+        if self.mock_mode:
+            logger.warning("KeeperHub initialized in MOCK mode (no API key configured)")
+        else:
+            logger.info(f"KeeperHub initialized with real API key, MCP URL: {self.mcp_url}")
 
     async def execute_transaction(
         self,
@@ -59,7 +68,7 @@ class KeeperHubClient:
         Execute an on-chain transaction via KeeperHub MCP.
         Returns {txHash, status, gasUsed, blockNumber}.
         """
-        if not self.mcp_url or self.mcp_url == "https://api.keeperhub.io/mcp":
+        if self.mock_mode:
             return await self._mock_transaction(contract_address, abi, method, args, gas_limit, value)
 
         payload = {
@@ -95,6 +104,20 @@ class KeeperHubClient:
                 await asyncio.sleep(2 ** attempt)
 
         return {"txHash": "0x", "status": "failed"}
+
+    def _coerce_bytes32(self, value: str) -> bytes:
+        if value.startswith("0x") and len(value) == 66:
+            return bytes.fromhex(value[2:])
+        if len(value) == 64:
+            return bytes.fromhex(value)
+        return Web3.keccak(text=value)
+
+    def _coerce_bytes(self, value: str | bytes) -> bytes:
+        if isinstance(value, bytes):
+            return value
+        if value.startswith("0x"):
+            return bytes.fromhex(value[2:])
+        return bytes.fromhex(value)
 
     async def _mock_transaction(
         self,
@@ -159,37 +182,69 @@ class KeeperHubClient:
     async def submit_battle_result(
         self,
         battle_arena_address: str,
-        battle_arena_abi: list,
         battle_id: str,
         winner_address: str,
+        transcript_hash: str,
         signature: str,
     ) -> str:
         """Submit battle result — most critical TX in Pantheon."""
-        result = await self.execute_transaction(
-            contract_address=battle_arena_address,
-            abi=battle_arena_abi,
-            method="submitResult",
-            args=[battle_id, winner_address, signature],
-            gas_limit=400_000,
-        )
-        return result["txHash"]
+        logger.info(f"[KH] Submitting battle result: battleId={battle_id}, winner={winner_address}")
+        try:
+            result = await self.execute_transaction(
+                contract_address=battle_arena_address,
+                abi=[
+                    {
+                        "name": "submitResult",
+                        "type": "function",
+                        "stateMutability": "nonpayable",
+                        "inputs": [
+                            {"name": "battleId", "type": "bytes32"},
+                            {"name": "winner", "type": "address"},
+                            {"name": "transcriptHash", "type": "bytes32"},
+                            {"name": "signature", "type": "bytes"},
+                        ],
+                        "outputs": [],
+                    }
+                ],
+                method="submitResult",
+                args=[
+                    self._coerce_bytes32(battle_id),
+                    winner_address,
+                    self._coerce_bytes32(transcript_hash),
+                    self._coerce_bytes(signature),
+                ],
+                gas_limit=400_000,
+            )
+            tx_hash = result.get("txHash")
+            logger.info(f"[KH] Battle result submitted: txHash={tx_hash}")
+            return tx_hash
+        except Exception as e:
+            logger.error(f"[KH] Failed to submit battle result: {e}", exc_info=True)
+            raise
 
     async def update_ens_records(
         self,
         subnames_address: str,
-        subnames_abi: list,
         token_id: int,
         new_elo: int,
-        new_rank: int,
-        wins: int,
-        losses: int,
     ) -> str:
         """Batch update ENS text records post-battle."""
         result = await self.execute_transaction(
             contract_address=subnames_address,
-            abi=subnames_abi,
+            abi=[
+                {
+                    "name": "updateRecords",
+                    "type": "function",
+                    "stateMutability": "nonpayable",
+                    "inputs": [
+                        {"name": "tokenId", "type": "uint256"},
+                        {"name": "newElo", "type": "uint16"},
+                    ],
+                    "outputs": [],
+                }
+            ],
             method="updateRecords",
-            args=[token_id, str(new_elo), str(new_rank), str(wins), str(losses)],
+            args=[token_id, new_elo],
             gas_limit=200_000,
         )
         return result["txHash"]

@@ -20,6 +20,7 @@ class AgentProfile(BaseModel):
     storage_hash: str
     axl_public_key: str = ""
     memory_key: str = ""      # 0G Storage KV key for episodic memory
+    owner: Optional[str] = None
 
 
 class BattleConfig(BaseModel):

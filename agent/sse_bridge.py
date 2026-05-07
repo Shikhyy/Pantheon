@@ -8,12 +8,18 @@ import asyncio
 import json
 import time
 import uuid
+import logging
 from typing import AsyncGenerator
 
-from fastapi import FastAPI, BackgroundTasks
+from fastapi import FastAPI, BackgroundTasks, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sse_starlette.sse import EventSourceResponse
 from pydantic import BaseModel
+
+from tee import get_default_tee
+import os
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Pantheon SSE Bridge", version="1.0.0")
 
@@ -68,44 +74,16 @@ async def battle_stream(battle_id: str) -> EventSourceResponse:
             })
         }
 
-        # For demo: emit mock events if no real battle
-        demo_events = _mock_battle_events(battle_id)
-        demo_idx = 0
-        last_demo_time = time.time()
-
         while True:
-            # Check for real events first
+            # Check for real events
             try:
-                event = queue.get_nowait()
+                event = await queue.get()
                 yield {"data": json.dumps(event)}
-                continue
-            except asyncio.QueueEmpty:
-                pass
-
-            # Emit mock events for demo
-            now = time.time()
-            if demo_idx < len(demo_events) and now - last_demo_time > 3.0:
-                yield {"data": json.dumps(demo_events[demo_idx])}
-                demo_idx += 1
-                last_demo_time = now
-
-            await asyncio.sleep(0.5)
+            except Exception as e:
+                logger.error(f"Error in SSE event generator: {e}")
+                break
 
     return EventSourceResponse(event_generator())
-
-
-class BattleStartRequest(BaseModel):
-    battle_id: str
-    agent_a_token_id: int
-    agent_b_token_id: int
-    wager_amount: float = 0.0
-
-
-@app.post("/battle/start")
-async def start_battle(req: BattleStartRequest, background_tasks: BackgroundTasks):
-    """Spawn agent processes for a new battle."""
-    background_tasks.add_task(_run_mock_battle, req.battle_id)
-    return {"status": "started", "battle_id": req.battle_id}
 
 
 @app.post("/battle/{battle_id}/emit")
@@ -115,144 +93,53 @@ async def emit_event(battle_id: str, event: dict):
     return {"ok": True}
 
 
-# ── Mock battle for demo ──────────────────────────────────────
-
-def _mock_battle_events(battle_id: str) -> list[dict]:
-    return [
-        {
-            "type": "axl_message",
-            "battle_id": battle_id,
-            "data": {
-                "id": str(uuid.uuid4()),
-                "from": "Athena-III",
-                "type": "MOVE",
-                "content": "Round 1: Analyzing ETH price momentum. My prediction: $3,650 in 48h. Confidence: 0.78",
-                "timestamp": time.time() * 1000,
-                "nodeColor": "sky",
-            }
-        },
-        {
-            "type": "axl_message",
-            "battle_id": battle_id,
-            "data": {
-                "id": str(uuid.uuid4()),
-                "from": "Achilles",
-                "type": "MOVE",
-                "content": "BOLD PREDICTION: $3,800. The momentum is undeniable. Confidence: 0.91",
-                "timestamp": time.time() * 1000,
-                "nodeColor": "hadria",
-            }
-        },
-        {
-            "type": "round_score",
-            "battle_id": battle_id,
-            "data": {
-                "round": 1,
-                "scoreA": 72,
-                "scoreB": 58,
-                "reasoning": "Athena-III showed superior analytical calibration."
-            }
-        },
-        {
-            "type": "axl_message",
-            "battle_id": battle_id,
-            "data": {
-                "id": str(uuid.uuid4()),
-                "from": "Referee",
-                "type": "SCORE",
-                "content": "Round 1 complete. Athena-III: 72pts | Achilles: 58pts",
-                "timestamp": time.time() * 1000,
-                "nodeColor": "willa",
-            }
-        },
-    ]
+# ── TEE (Trusted Execution Environment) shim endpoints ─────────
 
 
-async def _run_mock_battle(battle_id: str):
-    """Simulate a full 5-round battle for demo purposes."""
-    rounds = [
-        ("prediction", "ETH price in 48h?"),
-        ("prediction", "Uniswap vs Aave TVL growth?"),
-        ("debate", "Will AI replace traders by 2028?"),
-        ("dilemma", "Stake, LP, or hold 1 ETH?"),
-        ("oracle", "Most important Web3 development in 6 months?"),
-    ]
+@app.get("/tee/status")
+async def tee_status():
+    try:
+        tee = get_default_tee()
+        return tee.get_status()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-    agents = ["Athena-III", "Achilles"]
-    colors = ["sky", "hadria"]
 
-    for i, (ctype, prompt) in enumerate(rounds):
-        round_num = i + 1
+class SignRequest(BaseModel):
+    payload_hex: str
 
-        # Broadcast challenge
-        await _push_event(battle_id, {
-            "type": "battle_phase",
-            "battle_id": battle_id,
-            "data": f"ROUND_{round_num}",
-        })
 
-        await asyncio.sleep(2)
+@app.post("/tee/sign")
+async def tee_sign(req: SignRequest, request: Request):
+    """Sign arbitrary payload via the configured TEE provider.
 
-        # Agent A move
-        await _push_event(battle_id, {
-            "type": "axl_message",
-            "battle_id": battle_id,
-            "data": {
-                "id": str(uuid.uuid4()),
-                "from": agents[0],
-                "type": "MOVE",
-                "content": f"Round {round_num} [{ctype}]: {prompt} — My analysis points to a clear answer. Proceeding with precision.",
-                "timestamp": time.time() * 1000,
-                "nodeColor": colors[0],
-            }
-        })
+    Returns raw signature bytes as hex. In production this should be
+    restricted and authenticated.
+    """
+    # Simple API-key ACL for signing. In production replace with mTLS/JWT.
+    api_key = os.environ.get("TEE_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="TEE signing not configured")
 
-        await asyncio.sleep(2)
+    provided = request.headers.get("x-tee-api-key")
+    if not provided:
+        raise HTTPException(status_code=401, detail="Missing x-tee-api-key header")
 
-        # Agent B move
-        await _push_event(battle_id, {
-            "type": "axl_message",
-            "battle_id": battle_id,
-            "data": {
-                "id": str(uuid.uuid4()),
-                "from": agents[1],
-                "type": "MOVE",
-                "content": f"Round {round_num}: I answer with absolute conviction. My directive demands boldness.",
-                "timestamp": time.time() * 1000,
-                "nodeColor": colors[1],
-            }
-        })
+    if provided != api_key:
+        raise HTTPException(status_code=403, detail="Invalid API key")
 
-        await asyncio.sleep(2)
-
-        # Round score
-        score_a = 60 + (round_num * 3)
-        score_b = 55 + (round_num * 2)
-        await _push_event(battle_id, {
-            "type": "round_score",
-            "battle_id": battle_id,
-            "data": {
-                "round": round_num,
-                "scoreA": score_a,
-                "scoreB": score_b,
-                "reasoning": f"Round {round_num} judged. Athena-III shows consistent precision.",
-            }
-        })
-
-        await asyncio.sleep(3)
-
-    # Battle end
-    await _push_event(battle_id, {
-        "type": "battle_end",
-        "battle_id": battle_id,
-        "data": {
-            "winner": "Athena-III",
-            "winner_token_id": 2,
-            "elo_delta": 24,
-        }
-    })
+    try:
+        tee = get_default_tee()
+        payload = bytes.fromhex(req.payload_hex.replace('0x', ''))
+        sig = tee.sign(payload)
+        # Signature may be bytes or hex-string
+        if isinstance(sig, bytes):
+            return {"signature": sig.hex()}
+        return {"signature": sig if sig.startswith('0x') else f"0x{sig}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=8000)

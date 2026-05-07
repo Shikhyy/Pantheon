@@ -5,7 +5,10 @@ Submits battle computations for ZK verification.
 import httpx
 import json
 import asyncio
+import logging
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 try:
     from config import settings
@@ -27,11 +30,16 @@ class GensynClient:
         else:
             self.gensyn_url = "https://api.gensyn.io/v1"
             self.api_key = ""
-        
+
+        self.mock_mode = not bool(self.api_key)
         self.headers = {
             "Authorization": f"Bearer {self.api_key}" if self.api_key else "",
             "Content-Type": "application/json",
         }
+        if self.mock_mode:
+            logger.warning("Gensyn initialized in MOCK mode (no API key configured)")
+        else:
+            logger.info(f"Gensyn initialized with real API key")
 
     async def submit_battle_computation(
         self,
@@ -47,7 +55,7 @@ class GensynClient:
         
         Returns: {computeId, status, submittedAt}
         """
-        if not self.gensyn_url or self.gensyn_url == "https://api.gensyn.io/v1":
+        if self.mock_mode:
             return await self._mock_submission(battle_inputs, agents)
 
         program = self._build_battle_program(agents)
@@ -131,24 +139,13 @@ class GensynClient:
             "version": "1.0",
         })
 
-    async def verify_proof_on_chain(
-        self,
-        compute_id: str,
-        proof: dict,
-        battle_arena_address: str,
-    ) -> str:
-        """
-        Submit proof to battle arena contract for on-chain verification.
-        Returns tx hash.
-        """
-        from keeperhub_client import KeeperHubClient
-        
-        kh = KeeperHubClient()
-        
-        return await kh.execute_transaction(
-            contract_address=battle_arena_address,
-            abi=[],
-            method="verifyProof",
-            args=[compute_id, proof["proof_data"]],
-            gas_limit=500_000,
-        )
+    async def store_verified_proof(self, battle_id: str, proof: dict) -> dict:
+        """Store a completed proof artifact in 0G Storage for later settlement/audit."""
+        try:
+            from og_client import ZeroGClient
+            og = ZeroGClient()
+            await og.kv_set(f"battle:{battle_id}:gensyn_proof", proof)
+            await og.log_append(namespace=f"battles/{battle_id}/proofs", entry=proof)
+        except Exception:
+            pass
+        return proof
