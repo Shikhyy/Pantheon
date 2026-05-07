@@ -73,8 +73,8 @@ class AgentMemorySkill:
         existing = await self.load_opponent(agent_id, opponent_id)
 
         summary = await self.compute.infer(
-            system="You are a tactical AI analyst. Be specific and concise.",
-            prompt=(
+            system_prompt="You are a tactical AI analyst. Be specific and concise.",
+            user_message=(
                 f"Previous opponent model: {existing}\n\n"
                 f"New battle data:\n"
                 f"  Archetype: {battle_data.get('opponent_archetype')}\n"

@@ -23,4 +23,4 @@ unichain_testnet = "https://sepolia.unichain.org"
 local = "http://127.0.0.1:8545"
 
 [etherscan]
-og_testnet = { key = "${OG_PRIVATE_KEY}", url = "https://chainscan-newton.0g.ai/api" }
+og_testnet = { key = "${OG_PRIVATE_KEY}", url = "https://chainscan-galileo.0g.ai/open/api" }

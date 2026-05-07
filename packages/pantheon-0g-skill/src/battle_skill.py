@@ -5,6 +5,7 @@ Composes compute + storage + memory into a single drop-in battle skill.
 import time
 import re
 from .compute_skill  import ZeroGComputeSkill
+from .router_skill   import ZeroGRouterSkill
 from .storage_skill  import ZeroGStorageSkill
 from .memory_skill   import AgentMemorySkill
 
@@ -42,7 +43,7 @@ class PantheonBattleSkill:
     Composes: compute + storage + memory + AXL comms.
 
     Usage:
-        skill = PantheonBattleSkill(compute, storage, axl)
+        skill = PantheonBattleSkill(compute, router, storage, axl)
         skill.register(my_openclaw_agent)
 
     Registered skills:
@@ -57,10 +58,12 @@ class PantheonBattleSkill:
     def __init__(
         self,
         compute: ZeroGComputeSkill,
+        router: ZeroGRouterSkill | None,
         storage: ZeroGStorageSkill,
         axl_client=None,
     ):
         self.compute = compute
+        self.router  = router or compute
         self.storage = storage
         self.axl     = axl_client
         self.memory  = AgentMemorySkill(storage, compute)
@@ -110,7 +113,7 @@ class PantheonBattleSkill:
             "CONFIDENCE: [0.0-1.0]"
         )
 
-        response = await self.compute.chat(
+        response = await self.router.infer(
             messages=[
                 {"role": "system", "content": system},
                 {"role": "user",   "content": user},
@@ -144,13 +147,13 @@ class PantheonBattleSkill:
             "VERDICT: [1-2 sentences]"
         )
 
-        response = await self.compute.infer(
-            system=(
+        response = await self.router.infer(
+            system_prompt=(
                 "You are an impartial AI battle referee. "
                 "Score with consistency and precision. "
                 "Accuracy=40pts, Reasoning=30pts, Creativity=20pts, Calibration=10pts."
             ),
-            prompt=scoring_prompt,
+            user_message=scoring_prompt,
             temperature=0.2,
             max_tokens=300,
         )
