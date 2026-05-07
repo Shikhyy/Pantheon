@@ -99,14 +99,14 @@ interface GameState {
   setLeaderboard: (agents: Agent[]) => void
 }
 
-const defaultForgeState: ForgeState = {
+const createDefaultForgeState = (): ForgeState => ({
   archetype: null,
   name: '',
   nameStatus: 'idle',
   directive: '',
   stage: 0,
   txHashes: {},
-}
+})
 
 export const useGameStore = create<GameState>()(
   subscribeWithSelector(
@@ -162,9 +162,9 @@ export const useGameStore = create<GameState>()(
       }),
 
       // Forge
-      forgeState: defaultForgeState,
+      forgeState: createDefaultForgeState(),
       updateForge: (partial) => set((s) => { Object.assign(s.forgeState, partial) }),
-      resetForge: () => set((s) => { s.forgeState = defaultForgeState }),
+      resetForge: () => set((s) => { s.forgeState = createDefaultForgeState() }),
 
       // Scene
       cameraPhase: 'landing',

@@ -94,7 +94,7 @@ export function useChallenge() {
       address: CONTRACT_ADDRESSES.battleArena,
       abi: BATTLE_ARENA_ABI,
       functionName: 'challenge',
-      args: [challengerTokenId, defenderTokenId, CONTRACT_ADDRESSES.pantheonAgent, wagerAmount],
+      args: [challengerTokenId, defenderTokenId, '0x0000000000000000000000000000000000000000', wagerAmount],
       value: wagerAmount,
     })
   }

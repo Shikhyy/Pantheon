@@ -1,14 +1,14 @@
 'use client'
 
-import { use, useEffect, useRef, useState, Suspense } from 'react'
+import { use, useEffect, useRef, useState, Suspense, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Canvas } from '@react-three/fiber'
-import { MOCK_BATTLE, MOCK_BATTLE_LOG } from '@/lib/mock-data'
 import { cn, ARCHETYPE_ICONS, getArchetypeIcon } from '@/lib/utils'
 import type { AXLMessage, Archetype } from '@/lib/store'
 import { useAccount, useWriteContract } from 'wagmi'
 import { parseEther, stringToHex, pad } from 'viem'
 import { AGORA_POOL_ABI, CONTRACT_ADDRESSES } from '@/lib/contracts'
+import { useBattle, useGetAgent, useGetAgentName } from '@/lib/hooks'
 import { toast } from 'sonner'
 import { playSound } from '@/components/audio/SoundEffects'
 import { BattleStage } from '@/components/r3f/scenes/BattleStage'
@@ -17,6 +17,8 @@ import type { BattleState } from '@/components/r3f/avatars/AgentAvatar'
 interface Props {
   params: Promise<{ id: string }>
 }
+
+const ARCHETYPES = ['Unknown', 'Strategist', 'Berserker', 'Oracle', 'Diplomat']
 
 function HealthBar({ label, health, color }: { label: string; health: number; color: string }) {
   return (
@@ -77,7 +79,13 @@ function DivinWhisperLog({ messages }: { messages: AXLMessage[] }) {
   )
 }
 
-function WagerPoolBar({ wageredA, wageredB, onOpenWager }: { wageredA: bigint; wageredB: bigint; onOpenWager: () => void }) {
+function WagerPoolBar({ wageredA, wageredB, onOpenWager, nameA, nameB }: { 
+  wageredA: bigint; 
+  wageredB: bigint; 
+  onOpenWager: () => void;
+  nameA: string;
+  nameB: string;
+}) {
   const total = wageredA + wageredB
   const pctA = total > 0n ? Number((wageredA * 100n) / total) : 50
   const pctB = 100 - pctA
@@ -86,18 +94,18 @@ function WagerPoolBar({ wageredA, wageredB, onOpenWager }: { wageredA: bigint; w
     <div className="glass-panel p-4">
       <div className="section-label text-[7px] mb-3">⚱ Agora Pool — Spectator Wagers</div>
       <div className="flex items-center gap-2 mb-2">
-        <span className="font-cinzel text-[8px] text-sky">{pctA}% Athena-III</span>
+        <span className="font-cinzel text-[8px] text-sky">{pctA}% {nameA}</span>
         <div className="flex-1 h-3 bg-stone/40 overflow-hidden flex">
           <div className="h-full bg-sky/40 transition-all duration-1000" style={{ width: `${pctA}%` }} />
           <div className="h-full bg-hadria/40 transition-all duration-1000" style={{ width: `${pctB}%` }} />
         </div>
-        <span className="font-cinzel text-[8px] text-hadria">{pctB}% Achilles</span>
+        <span className="font-cinzel text-[8px] text-hadria">{pctB}% {nameB}</span>
       </div>
       <div className="text-center mt-3">
         <span className="font-josefin text-xs text-parch/30 block mb-2">
           Total Pool: {Number(total) / 1e18} ETH
         </span>
-        <button id="open-wager-modal" onClick={onOpenWager} className="btn-ghost text-[8px] px-4 py-1.5 border border-gold/30 hover:border-gold/60 text-gold/80">
+        <button id="open-wager-modal" onClick={onOpenWager} className="btn-gold text-[8px] px-4 py-1.5 border border-gold/30 hover:border-gold/60 text-gold/80">
           Place Wager
         </button>
       </div>
@@ -105,7 +113,12 @@ function WagerPoolBar({ wageredA, wageredB, onOpenWager }: { wageredA: bigint; w
   )
 }
 
-function WagerModal({ id, battle, onClose }: { id: string; battle: typeof MOCK_BATTLE; onClose: () => void }) {
+function WagerModal({ id, agentA, agentB, onClose }: { 
+  id: string; 
+  agentA: { name: string, archetype: Archetype }; 
+  agentB: { name: string, archetype: Archetype }; 
+  onClose: () => void 
+}) {
   const { isConnected } = useAccount()
   const [amount, setAmount] = useState('0.01')
   const [side, setSide] = useState<'A' | 'B' | null>(null)
@@ -127,7 +140,6 @@ function WagerModal({ id, battle, onClose }: { id: string; battle: typeof MOCK_B
     }
     playSound('stoneClick')
     
-    // Use the actual battle ID from the URL if it's a valid hex, otherwise fallback to mock for demo
     const battleIdToUse = id.startsWith('0x') && id.length === 66 
       ? id as `0x${string}` 
       : pad(stringToHex(id), { size: 32 })
@@ -143,7 +155,7 @@ function WagerModal({ id, battle, onClose }: { id: string; battle: typeof MOCK_B
           side === 'A'
         ]
       })
-      toast.success(`Successfully placed ${amount} ETH wager on ${side === 'A' ? battle.agentA.name : battle.agentB.name}`)
+      toast.success(`Successfully placed ${amount} ETH wager on ${side === 'A' ? agentA.name : agentB.name}`)
       onClose()
     } catch (err) {
       console.error(err)
@@ -166,8 +178,8 @@ function WagerModal({ id, battle, onClose }: { id: string; battle: typeof MOCK_B
               side === 'A' ? 'border-sky bg-sky/10' : 'hover:border-stone/40 opacity-70'
             )}
           >
-            <div className="text-2xl mb-1">{getArchetypeIcon(battle.agentA.archetype as Archetype, 20)}</div>
-            <div className="font-cinzel text-[10px] text-sky">{battle.agentA.name}</div>
+            <div className="text-2xl mb-1">{getArchetypeIcon(agentA.archetype, 20)}</div>
+            <div className="font-cinzel text-[10px] text-sky">{agentA.name}</div>
           </button>
           
           <button
@@ -177,8 +189,8 @@ function WagerModal({ id, battle, onClose }: { id: string; battle: typeof MOCK_B
               side === 'B' ? 'border-hadria bg-hadria/10' : 'hover:border-stone/40 opacity-70'
             )}
           >
-            <div className="text-2xl mb-1">{getArchetypeIcon(battle.agentB.archetype as Archetype, 20)}</div>
-            <div className="font-cinzel text-[10px] text-hadria">{battle.agentB.name}</div>
+            <div className="text-2xl mb-1">{getArchetypeIcon(agentB.archetype, 20)}</div>
+            <div className="font-cinzel text-[10px] text-hadria">{agentB.name}</div>
           </button>
         </div>
         
@@ -204,16 +216,60 @@ function WagerModal({ id, battle, onClose }: { id: string; battle: typeof MOCK_B
   )
 }
 
-
-
 export default function ColosseumPage({ params }: Props) {
   const { id } = use(params)
-  const [messages, setMessages] = useState<AXLMessage[]>(MOCK_BATTLE_LOG as any)
-  const [battle] = useState(MOCK_BATTLE)
-  const [round, setRound] = useState(3)
+  const [messages, setMessages] = useState<AXLMessage[]>([])
+  const [round, setRound] = useState(1)
   const [showWagerModal, setShowWagerModal] = useState(false)
   const [verificationStatus, setVerificationStatus] = useState<'pending' | 'verified' | 'failed' | 'none'>('none')
-  const parallaxRef = useRef<HTMLDivElement>(null)
+  const [healthA, setHealthA] = useState(100)
+  const [healthB, setHealthB] = useState(100)
+
+  // Fetch real battle data
+  const { data: battleDataRaw, isLoading: battleLoading } = useBattle(id as `0x${string}`)
+  
+  const battleData = useMemo(() => {
+    if (!battleDataRaw) return null
+    return {
+      challengerTokenId: battleDataRaw.challengerTokenId,
+      defenderTokenId: battleDataRaw.defenderTokenId,
+      challengerOwner: battleDataRaw.challengerOwner,
+      defenderOwner: battleDataRaw.defenderOwner,
+      wagerToken: battleDataRaw.wagerToken,
+      wagerAmount: battleDataRaw.wagerAmount,
+      phase: Number(battleDataRaw.phase),
+      createdAt: battleDataRaw.createdAt,
+      startedAt: battleDataRaw.startedAt,
+      winner: battleDataRaw.winner,
+      transcriptHash: battleDataRaw.transcriptHash,
+    }
+  }, [battleDataRaw])
+
+  // Fetch agents data
+  const { data: agentARaw } = useGetAgent(battleData?.challengerTokenId)
+  const { data: agentBRaw } = useGetAgent(battleData?.defenderTokenId)
+  const nameA = useGetAgentName(battleData?.challengerTokenId)
+  const nameB = useGetAgentName(battleData?.defenderTokenId)
+
+  const agentA = useMemo(() => {
+    if (!agentARaw) return { name: nameA || 'Challenger', archetype: 'Strategist' as Archetype, elo: 1500, rank: 'Demigod' }
+    return {
+      name: nameA || `Agent #${battleData?.challengerTokenId}`,
+      archetype: (ARCHETYPES[agentARaw.archetype] || 'Strategist') as Archetype,
+      elo: Number(agentARaw.elo),
+      rank: agentARaw.rank,
+    }
+  }, [agentARaw, nameA, battleData])
+
+  const agentB = useMemo(() => {
+    if (!agentBRaw) return { name: nameB || 'Defender', archetype: 'Berserker' as Archetype, elo: 1500, rank: 'Demigod' }
+    return {
+      name: nameB || `Agent #${battleData?.defenderTokenId}`,
+      archetype: (ARCHETYPES[agentBRaw.archetype] || 'Berserker') as Archetype,
+      elo: Number(agentBRaw.elo),
+      rank: agentBRaw.rank,
+    }
+  }, [agentBRaw, nameB, battleData])
 
   useEffect(() => {
     if (round >= 5) {
@@ -244,8 +300,20 @@ export default function ColosseumPage({ params }: Props) {
         const parsed = JSON.parse(event.data)
         if (parsed.type === 'axl_message') {
           setMessages(prev => [...prev.slice(-30), parsed.data])
+          if (parsed.data.from === agentA.name) {
+            playSound('swordClash')
+          } else if (parsed.data.from === agentB.name) {
+            playSound('swordClash')
+          }
         } else if (parsed.type === 'round_score') {
           setRound(parsed.data.round + 1)
+          setHealthA(prev => Math.max(0, prev - (parsed.data.scoreB / 10)))
+          setHealthB(prev => Math.max(0, prev - (parsed.data.scoreA / 10)))
+          playSound('apotheosis')
+        } else if (parsed.type === 'battle_end') {
+          toast.success(`Battle ended! Winner: ${parsed.data.winner}`)
+          setRound(6)
+          playSound('apotheosis')
         }
       } catch (e) {
         console.error('Failed to parse SSE data', e)
@@ -259,7 +327,15 @@ export default function ColosseumPage({ params }: Props) {
     return () => {
       eventSource.close()
     }
-  }, [id])
+  }, [id, agentA.name, agentB.name])
+
+  if (battleLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="font-cinzel text-parch/40 animate-pulse">Summoning Battle Data...</div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen pt-20 px-6 pb-8">
@@ -267,11 +343,13 @@ export default function ColosseumPage({ params }: Props) {
 
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="section-label mb-2">The Colosseum · Battle #{id}</div>
+          <div className="section-label mb-2">The Colosseum · Battle #{id.slice(0, 10)}...</div>
           <div className="flex items-center justify-center gap-4">
             <span className="font-cinzel text-xs text-sky tracking-widest">LIVE</span>
             <span className="w-2 h-2 rounded-full bg-olivine animate-pulse" />
-            <span className="font-cinzel text-xs text-parch/30 tracking-widest">Round {round} / 5</span>
+            <span className="font-cinzel text-xs text-parch/30 tracking-widest">
+              {round > 5 ? 'COMPLETED' : `Round ${round} / 5`}
+            </span>
           </div>
         </div>
 
@@ -285,10 +363,10 @@ export default function ColosseumPage({ params }: Props) {
             <div className="flex items-end gap-8">
               {/* Agent A health */}
               <div className="w-32 text-right">
-                <div className="font-cinzel text-xs text-sky mb-1">{battle.agentA.name}</div>
-                <div className="section-label text-[7px] text-parch/30 mb-2">{battle.agentA.ensName}</div>
+                <div className="font-cinzel text-xs text-sky mb-1">{agentA.name}</div>
+                <div className="section-label text-[7px] text-parch/30 mb-2">{`${agentA.name.toLowerCase()}.agent.eth`}</div>
                 <div className="health-bar-track">
-                  <div className="health-bar-fill" style={{ width: `${battle.healthA}%`, background: 'linear-gradient(90deg, #2A7A9A, #85D3F2)' }} />
+                  <div className="health-bar-fill" style={{ width: `${healthA}%`, background: 'linear-gradient(90deg, #2A7A9A, #85D3F2)' }} />
                 </div>
               </div>
 
@@ -296,10 +374,10 @@ export default function ColosseumPage({ params }: Props) {
 
               {/* Agent B health */}
               <div className="w-32 text-left">
-                <div className="font-cinzel text-xs text-hadria mb-1">{battle.agentB.name}</div>
-                <div className="section-label text-[7px] text-parch/30 mb-2">{battle.agentB.ensName}</div>
+                <div className="font-cinzel text-xs text-hadria mb-1">{agentB.name}</div>
+                <div className="section-label text-[7px] text-parch/30 mb-2">{`${agentB.name.toLowerCase()}.agent.eth`}</div>
                 <div className="health-bar-track">
-                  <div className="health-bar-fill" style={{ width: `${battle.healthB}%`, background: 'linear-gradient(90deg, #722020, #8B3A3A)' }} />
+                  <div className="health-bar-fill" style={{ width: `${healthB}%`, background: 'linear-gradient(90deg, #722020, #8B3A3A)' }} />
                 </div>
               </div>
             </div>
@@ -324,17 +402,17 @@ export default function ColosseumPage({ params }: Props) {
             <Suspense fallback={null}>
               <BattleStage
                 agentA={{
-                  archetype: battle.agentA.archetype as Archetype,
-                  elo: battle.agentA.elo,
-                  rank: battle.agentA.rank,
-                  health: battle.healthA,
+                  archetype: agentA.archetype,
+                  elo: agentA.elo,
+                  rank: agentA.rank as any,
+                  health: healthA,
                   battleState: 'idle' as BattleState,
                 }}
                 agentB={{
-                  archetype: battle.agentB.archetype as Archetype,
-                  elo: battle.agentB.elo,
-                  rank: battle.agentB.rank,
-                  health: battle.healthB,
+                  archetype: agentB.archetype,
+                  elo: agentB.elo,
+                  rank: agentB.rank as any,
+                  health: healthB,
                   battleState: 'idle' as BattleState,
                 }}
               />
@@ -346,20 +424,27 @@ export default function ColosseumPage({ params }: Props) {
         {/* Bottom panels */}
         <div className="grid md:grid-cols-2 gap-4">
           <DivinWhisperLog messages={messages} />
-          <WagerPoolBar wageredA={battle.wageredA} wageredB={battle.wageredB} onOpenWager={() => setShowWagerModal(true)} />
+          <WagerPoolBar 
+            wageredA={battleData?.wagerAmount || 0n} 
+            wageredB={0n} // TODO: Fetch from AgoraPool contract
+            onOpenWager={() => setShowWagerModal(true)}
+            nameA={agentA.name}
+            nameB={agentB.name}
+          />
         </div>
 
         {/* Battle status */}
         <div className="mt-4 glass-panel p-4 flex items-center gap-4">
-          <div className="w-2 h-2 rounded-full bg-olivine animate-pulse" />
+          <div className={cn("w-2 h-2 rounded-full animate-pulse", round > 5 ? "bg-stone" : "bg-olivine")} />
           <span className="font-cinzel text-[8px] tracking-widest text-parch/40 uppercase">
-            Battle Active · monitoring 0G Storage log streaming
+            {round > 5 ? 'Battle Finalized · transcript verified on Gensyn' : 'Battle Active · monitoring 0G Storage log streaming'}
           </span>
         </div>
 
         {/* Wager Modal */}
-        {showWagerModal && <WagerModal id={id} battle={battle} onClose={() => setShowWagerModal(false)} />}
+        {showWagerModal && <WagerModal id={id} agentA={agentA} agentB={agentB} onClose={() => setShowWagerModal(false)} />}
       </div>
     </div>
   )
 }
+

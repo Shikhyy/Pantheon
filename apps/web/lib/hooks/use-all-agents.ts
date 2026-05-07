@@ -42,6 +42,20 @@ export function useAllAgents() {
       functionName: 'getNameByTokenId',
       args: [BigInt(i)],
     })
+    contracts.push({
+      address: CONTRACT_ADDRESSES.pantheonAgent,
+      abi: [
+        {
+          name: 'ownerOf',
+          type: 'function',
+          stateMutability: 'view',
+          inputs: [{ name: 'tokenId', type: 'uint256' }],
+          outputs: [{ name: '', type: 'address' }],
+        },
+      ] as const,
+      functionName: 'ownerOf',
+      args: [BigInt(i)],
+    })
   }
 
   const { data: results, isLoading } = useReadContracts({
@@ -55,8 +69,9 @@ export function useAllAgents() {
   
   if (results) {
     for (let i = 0; i < totalSupply; i++) {
-      const agentDataResult = results[i * 2]
-      const nameResult = results[i * 2 + 1]
+      const agentDataResult = results[i * 3]
+      const nameResult = results[i * 3 + 1]
+      const ownerResult = results[i * 3 + 2]
 
       if (agentDataResult?.status === 'success' && nameResult?.status === 'success') {
         const agentData = agentDataResult.result as any
@@ -72,7 +87,7 @@ export function useAllAgents() {
           battleCount: Number(agentData.battleCount),
           storageHash: agentData.storageHash,
           directiveHash: agentData.directiveHash,
-          owner: '0x', // Owner fetch requires ownerOf which is standard ERC721
+          owner: (ownerResult?.result as string) || '0x0000000000000000000000000000000000000000',
         })
       }
     }
